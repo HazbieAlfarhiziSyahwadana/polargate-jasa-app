@@ -14,7 +14,7 @@
     <div class="lg:col-span-2 space-y-6">
         <!-- Gambar & Info Utama -->
         <div class="card">
-            <img src="{{ $layanan->gambar_url }}" alt="{{ $layanan->nama_layanan }}" class="w-full h-64 object-cover rounded-lg mb-4">
+            <img src="{{ $layanan->gambar_url }}" alt="{{ $layanan->nama_layanan }}" class="w-full h-64 object-contain rounded-lg mb-4 bg-gray-100 border border-gray-200">
             
             <span class="badge-info mb-2">{{ $layanan->kategori }}</span>
             <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ $layanan->nama_layanan }}</h1>
@@ -106,7 +106,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @foreach($layananTerkait as $item)
                 <a href="{{ route('client.layanan.show', $item) }}" class="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
-                    <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}" class="w-full h-32 object-cover rounded mb-3">
+                    <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}" class="w-full h-32 object-contain rounded mb-3 bg-gray-100 border border-gray-200">
                     <h4 class="font-semibold text-gray-800 mb-1">{{ $item->nama_layanan }}</h4>
                     <p class="text-sm text-gray-600 mb-2 line-clamp-2">{{ Str::limit($item->deskripsi, 80) }}</p>
                     <p class="text-primary-600 font-semibold">Mulai Rp {{ number_format($item->harga_mulai, 0, ',', '.') }}</p>

@@ -37,7 +37,7 @@
     <div class="card hover:shadow-xl transition-shadow duration-300">
         <!-- Gambar -->
         <div class="mb-4">
-            <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}" class="w-full h-48 object-cover rounded-lg">
+            <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}" class="w-full h-48 rounded-lg object-contain bg-gray-100 border border-gray-200">
         </div>
 
         <!-- Badge Kategori -->
