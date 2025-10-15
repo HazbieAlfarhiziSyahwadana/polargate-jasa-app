@@ -86,7 +86,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                         <a href="{{ route('admin.invoice.show', $invoice) }}" class="text-blue-600 hover:text-blue-900">Detail</a>
-                        <a href="{{ route('admin.invoice.print', $invoice) }}" target="_blank" class="text-green-600 hover:text-green-900">Print</a>
+                        <a href="{{ route('admin.invoice.download', $invoice) }}" class="text-green-600 hover:text-green-900">Download</a>
                     </td>
                 </tr>
                 @empty

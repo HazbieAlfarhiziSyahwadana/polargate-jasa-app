@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -17,12 +18,28 @@ class InvoiceController extends Controller
             })
             ->latest();
 
-        // Filter status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        $invoices = $query->paginate(10);
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($builder) use ($search) {
+                $builder->where('nomor_invoice', 'like', "%{$search}%")
+                    ->orWhereHas('pesanan', function ($pesanan) use ($search) {
+                        $pesanan->where('kode_pesanan', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('pesanan.layanan', function ($layanan) use ($search) {
+                        $layanan->where('nama_layanan', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('pesanan.paket', function ($paket) use ($search) {
+                        $paket->where('nama_paket', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $invoices = $query->paginate(10)->withQueryString();
 
         return view('client.invoice.index', compact('invoices'));
     }
@@ -56,7 +73,10 @@ class InvoiceController extends Controller
         })
         ->findOrFail($id);
 
-        // Generate PDF (opsional, bisa pakai package seperti DomPDF atau Snappy)
-        return view('client.invoice.pdf', compact('invoice'));
+        $pdf = Pdf::loadView('pdf.invoice', [
+            'invoice' => $invoice,
+        ])->setPaper('a4');
+
+        return $pdf->download('invoice-' . $invoice->nomor_invoice . '.pdf');
     }
 }

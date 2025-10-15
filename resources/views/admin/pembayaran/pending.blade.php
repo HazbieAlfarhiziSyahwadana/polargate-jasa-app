@@ -54,8 +54,8 @@
         <!-- Bukti Transfer -->
         <div class="mb-4">
             <p class="text-sm text-gray-600 mb-2">Bukti Transfer:</p>
-            <a href="{{ asset('uploads/pembayaran/' . $item->bukti_pembayaran) }}" target="_blank">
-                <img src="{{ asset('uploads/pembayaran/' . $item->bukti_pembayaran) }}" alt="Bukti Transfer" class="w-full h-48 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80">
+            <a href="{{ asset('storage/' . $item->bukti_pembayaran) }}" target="_blank">
+                <img src="{{ asset('storage/' . $item->bukti_pembayaran) }}" alt="Bukti Transfer" class="w-full h-48 object-contain bg-gray-100 rounded border cursor-pointer hover:opacity-80">
             </a>
         </div>
 

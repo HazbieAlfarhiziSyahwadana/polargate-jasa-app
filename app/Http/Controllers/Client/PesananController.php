@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\File;
+use ZipArchive;
 
 class PesananController extends Controller
 {
@@ -103,7 +105,7 @@ class PesananController extends Controller
                 $file->move(public_path('uploads/pesanan'), $filename);
                 $filePaths[] = $filename;
             }
-            $pesanan->update(['file_pendukung' => json_encode($filePaths)]);
+            $pesanan->update(['file_pendukung' => $filePaths]);
         }
 
         // Buat Invoice DP (50%)
@@ -194,17 +196,65 @@ class PesananController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!$pesanan->file_final) {
+        $pelunasanInvoice = $pesanan->invoices()
+            ->where('tipe', 'Pelunasan')
+            ->latest()
+            ->first();
+
+        if (!$pelunasanInvoice || $pelunasanInvoice->status !== 'Lunas') {
+            return redirect()->back()->with('error', 'File final baru dapat diunduh setelah pelunasan dinyatakan lunas.');
+        }
+
+        $fileFinal = $pesanan->file_final ?? [];
+        if (is_string($fileFinal)) {
+            $fileFinal = [$fileFinal];
+        }
+
+        $fileFinal = array_filter($fileFinal);
+
+        if (empty($fileFinal)) {
             return redirect()->back()->with('error', 'File final belum tersedia.');
         }
 
-        $filePath = public_path('uploads/pesanan/' . $pesanan->file_final);
+        $basePath = public_path('uploads/final');
+        $availableFiles = [];
 
-        if (!file_exists($filePath)) {
-            return redirect()->back()->with('error', 'File tidak ditemukan.');
+        foreach ($fileFinal as $fileName) {
+            $fullPath = $basePath . DIRECTORY_SEPARATOR . $fileName;
+            if (file_exists($fullPath)) {
+                $availableFiles[$fileName] = $fullPath;
+            }
         }
 
-        return response()->download($filePath);
+        if (empty($availableFiles)) {
+            return redirect()->back()->with('error', 'File final tidak ditemukan.');
+        }
+
+        if (count($availableFiles) === 1) {
+            $fileName = array_key_first($availableFiles);
+            return response()->download($availableFiles[$fileName], $fileName);
+        }
+
+        $tempDir = storage_path('app/tmp');
+        if (!File::exists($tempDir)) {
+            File::makeDirectory($tempDir, 0755, true);
+        }
+
+        $zipName = 'final-' . $pesanan->kode_pesanan . '-' . now()->format('YmdHis') . '.zip';
+        $zipPath = $tempDir . DIRECTORY_SEPARATOR . $zipName;
+
+        $zip = new ZipArchive;
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            return redirect()->back()->with('error', 'Gagal memproses file final untuk diunduh.');
+        }
+
+        foreach ($availableFiles as $fileName => $fullPath) {
+            $zip->addFile($fullPath, $fileName);
+        }
+
+        $zip->close();
+
+        return response()->download($zipPath, $zipName)->deleteFileAfterSend(true);
     }
 
     // Helper functions

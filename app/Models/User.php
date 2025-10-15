@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Storage;
+use App\Helpers\FileHelper;
 
 class User extends Authenticatable
 {
@@ -70,35 +70,32 @@ class User extends Authenticatable
         return $this->role === 'client';
     }
 
-    // Hitung usia otomatis
-    public static function boot()
-    {
-        parent::boot();
+    // Hitung usia otomatis
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            if ($user->tanggal_lahir) {
+                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
+            }
+        });
+
+        static::updating(function ($user) {
+            if ($user->tanggal_lahir) {
+                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
+            }
+
+            if ($user->isDirty('foto') && $user->getOriginal('foto')) {
+                FileHelper::deleteFile('users', $user->getOriginal('foto'));
+            }
+        });
+
+        static::deleting(function ($user) {
+            if ($user->foto) {
+                FileHelper::deleteFile('users', $user->foto);
+            }
+        });
+    }
 
-        static::creating(function ($user) {
-            if ($user->tanggal_lahir) {
-                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
-            }
-        });
-
-        static::updating(function ($user) {
-            if ($user->tanggal_lahir) {
-                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
-            }
-        });
-
-        // HAPUS FOTO LAMA SAAT UPDATE
-        static::updating(function ($user) {
-            if ($user->isDirty('foto') && $user->getOriginal('foto')) {
-                Storage::disk('public')->delete('users/' . $user->getOriginal('foto'));
-            }
-        });
-
-        // HAPUS FOTO SAAT DELETE USER
-        static::deleting(function ($user) {
-            if ($user->foto) {
-                Storage::disk('public')->delete('users/' . $user->foto);
-            }
-        });
-    }
 }

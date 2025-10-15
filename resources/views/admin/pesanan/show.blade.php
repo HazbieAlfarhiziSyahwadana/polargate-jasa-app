@@ -51,11 +51,25 @@
                 @method('PATCH')
                 <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Update Status Pesanan</label>
                 <div class="flex gap-2">
+                    @php
+                        $statusOptions = [
+                            'Menunggu Pembayaran DP',
+                            'DP Dibayar - Menunggu Verifikasi',
+                            'Sedang Diproses',
+                            'Preview Siap',
+                            'Revisi Diminta',
+                            'Menunggu Pelunasan',
+                            'Pelunasan Dibayar - Menunggu Verifikasi',
+                            'Selesai',
+                            'Dibatalkan',
+                        ];
+                    @endphp
                     <select name="status" id="status" class="input-field flex-1">
-                        <option value="Sedang Diproses" {{ $pesanan->status == 'Sedang Diproses' ? 'selected' : '' }}>Sedang Diproses</option>
-                        <option value="Preview Siap" {{ $pesanan->status == 'Preview Siap' ? 'selected' : '' }}>Preview Siap</option>
-                        <option value="Selesai" {{ $pesanan->status == 'Selesai' ? 'selected' : '' }}>Selesai</option>
-                        <option value="Dibatalkan" {{ $pesanan->status == 'Dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+                        @foreach($statusOptions as $statusOption)
+                            <option value="{{ $statusOption }}" {{ $pesanan->status == $statusOption ? 'selected' : '' }}>
+                                {{ $statusOption }}
+                            </option>
+                        @endforeach
                     </select>
                     <button type="submit" class="btn-primary">Update</button>
                 </div>
@@ -143,7 +157,10 @@
                         <p class="text-sm text-gray-500 mb-2">File Pendukung</p>
                         <div class="space-y-2">
                             @foreach($filePendukung as $file)
-                            <a href="{{ asset('storage/' . $file) }}" target="_blank" class="flex items-center bg-gray-50 p-3 rounded hover:bg-gray-100">
+                            @php
+                                $fileUrl = asset('uploads/pesanan/' . ltrim($file, '/'));
+                            @endphp
+                            <a href="{{ $fileUrl }}" target="_blank" class="flex items-center bg-gray-50 p-3 rounded hover:bg-gray-100">
                                 <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
@@ -158,7 +175,7 @@
         </div>
 
         <!-- Upload Preview -->
-        @if(in_array($pesanan->status, ['Sedang Diproses', 'Revisi']))
+        @if(in_array($pesanan->status, ['Sedang Diproses', 'Revisi Diminta', 'Preview Siap', 'Menunggu Pelunasan']))
         <div class="card">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Upload Preview</h2>
             
@@ -166,23 +183,40 @@
                 @csrf
                 <div>
                     <label for="preview_link" class="block text-sm font-medium text-gray-700 mb-2">Link Preview (Berlaku 24 jam)</label>
-                    <input type="url" name="preview_link" id="preview_link" class="input-field" placeholder="https://drive.google.com/..." required>
-                    <p class="text-xs text-gray-500 mt-1">Upload file preview ke Google Drive/Dropbox dan masukkan link sharingnya</p>
+                    <input type="url" name="preview_link" id="preview_link" class="input-field" placeholder="https://drive.google.com/..." value="{{ old('preview_link', $pesanan->preview_link) }}" required>
+                    <p class="text-xs text-gray-500 mt-1">Upload file preview ke Google Drive/Dropbox dan masukkan link sharingnya.</p>
+                </div>
+                <div class="mt-4">
+                    <label for="duration_hours" class="block text-sm font-medium text-gray-700 mb-2">Masa aktif link</label>
+                    <select name="duration_hours" id="duration_hours" class="input-field">
+                        <option value="6">6 jam</option>
+                        <option value="12">12 jam</option>
+                        <option value="24" selected>24 jam</option>
+                        <option value="48">48 jam</option>
+                        <option value="72">72 jam</option>
+                        <option value="168">7 hari</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn-primary mt-4">Upload Preview</button>
             </form>
         </div>
-        @endif
-
-        <!-- Preview Link -->
+        @endif        <!-- Preview Link -->
         @if($pesanan->preview_link)
         <div class="card">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-xl font-bold text-gray-800">Preview</h2>
                 <div class="flex gap-2">
-                    <form action="{{ route('admin.pesanan.extend-preview', $pesanan) }}" method="POST">
+                    <form action="{{ route('admin.pesanan.extend-preview', $pesanan) }}" method="POST" class="flex items-center gap-2">
                         @csrf
                         @method('PATCH')
+                        <select name="duration_hours" class="input-field input-field-sm w-28">
+                            <option value="6">+6 jam</option>
+                            <option value="12">+12 jam</option>
+                            <option value="24" selected>+24 jam</option>
+                            <option value="48">+48 jam</option>
+                            <option value="72">+72 jam</option>
+                            <option value="168">+7 hari</option>
+                        </select>
                         <button type="submit" class="btn-sm btn-info">
                             <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -206,11 +240,15 @@
             <div class="bg-blue-50 border border-blue-200 p-4 rounded">
                 <p class="text-sm text-gray-700 mb-2">Link Preview:</p>
                 <a href="{{ $pesanan->preview_link }}" target="_blank" class="text-blue-600 hover:underline break-all">{{ $pesanan->preview_link }}</a>
+                @php
+                    $previewExpiry = $pesanan->preview_expired_at ? \Carbon\Carbon::parse($pesanan->preview_expired_at) : null;
+                    $previewStillActive = $previewExpiry && $previewExpiry->isFuture();
+                @endphp
                 <p class="text-xs text-gray-500 mt-2">
-                    @if($pesanan->is_preview_active && $pesanan->preview_expired_at)
-                    <span class="text-green-600">● Aktif hingga {{ \Carbon\Carbon::parse($pesanan->preview_expired_at)->format('d M Y H:i') }}</span>
+                    @if($previewStillActive)
+                    <span class="text-green-600">&#x2714; Aktif hingga {{ $previewExpiry->format('d M Y H:i') }}</span>
                     @else
-                    <span class="text-red-600">● Link sudah kadaluarsa</span>
+                    <span class="text-red-600">&#x26A0; Link sudah kadaluarsa. Perpanjang untuk mengaktifkan kembali.</span>
                     @endif
                 </p>
             </div>
@@ -218,18 +256,24 @@
         @endif
 
         <!-- Upload File Final -->
-        @if($pesanan->status == 'Menunggu Pelunasan' && !$pesanan->file_final)
+        @if(in_array($pesanan->status, ['Menunggu Pelunasan', 'Pelunasan Dibayar - Menunggu Verifikasi', 'Selesai']))
         <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Upload File Final</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">
+                {{ $pesanan->file_final ? 'Perbarui File Final' : 'Upload File Final' }}
+            </h2>
             
             <form action="{{ route('admin.pesanan.upload-final', $pesanan) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div>
                     <label for="file_final" class="block text-sm font-medium text-gray-700 mb-2">File Final (Bisa multiple)</label>
                     <input type="file" name="file_final[]" id="file_final" class="input-field" multiple required>
-                    <p class="text-xs text-gray-500 mt-1">Max 100MB per file. Bisa upload multiple files.</p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Max 100MB per file. Mengunggah ulang akan menggantikan file final yang ada.
+                    </p>
                 </div>
-                <button type="submit" class="btn-primary mt-4">Upload File Final</button>
+                <button type="submit" class="btn-primary mt-4">
+                    {{ $pesanan->file_final ? 'Perbarui File Final' : 'Upload File Final' }}
+                </button>
             </form>
         </div>
         @endif
@@ -237,11 +281,14 @@
         <!-- File Final -->
         @if($pesanan->file_final)
             @php
-                $fileFinal = is_string($pesanan->file_final) 
-                    ? json_decode($pesanan->file_final, true) 
-                    : $pesanan->file_final;
+                $fileFinal = $pesanan->file_final;
+                if (is_string($fileFinal)) {
+                    $decoded = json_decode($fileFinal, true);
+                    $fileFinal = is_array($decoded) ? $decoded : [$fileFinal];
+                }
+                $fileFinal = array_filter(is_array($fileFinal) ? $fileFinal : (array) $fileFinal);
             @endphp
-            @if(is_array($fileFinal) && count($fileFinal) > 0)
+            @if(count($fileFinal) > 0)
             <div class="card">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">File Final</h2>
                 
@@ -252,9 +299,12 @@
                             <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
-                            <span class="text-sm text-gray-700">{{ basename($file) }}</span>
+                            <div class="flex flex-col">
+                                <span class="text-sm text-gray-700">{{ basename($file) }}</span>
+                                <span class="text-xs text-gray-500 uppercase">{{ strtoupper(pathinfo($file, PATHINFO_EXTENSION)) }}</span>
+                            </div>
                         </div>
-                        <a href="{{ asset('storage/' . $file) }}" download class="text-blue-600 hover:text-blue-800 text-sm">Download</a>
+                        <a href="{{ asset('uploads/final/' . ltrim($file, '/')) }}" download class="text-blue-600 hover:text-blue-800 text-sm">Download</a>
                     </div>
                     @endforeach
                 </div>
@@ -422,3 +472,7 @@
     </div>
 </div>
 @endsection
+
+
+
+

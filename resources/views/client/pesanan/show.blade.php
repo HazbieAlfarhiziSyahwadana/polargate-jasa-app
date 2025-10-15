@@ -16,6 +16,15 @@
             $statusClass = 'badge-info';
             if($pesanan->status == 'Selesai') $statusClass = 'badge-success';
             if(in_array($pesanan->status, ['Menunggu Pembayaran DP', 'Menunggu Pelunasan'])) $statusClass = 'badge-warning';
+
+            $dpInvoice = $pesanan->invoices->firstWhere('tipe', 'DP');
+            $dpLunas = $dpInvoice && $dpInvoice->status === 'Lunas';
+
+            $pelunasanInvoice = $pesanan->invoices->firstWhere('tipe', 'Pelunasan');
+            $pelunasanLunas = $pelunasanInvoice && $pelunasanInvoice->status === 'Lunas';
+
+            $previewExpiry = $pesanan->preview_expired_at ? \Carbon\Carbon::parse($pesanan->preview_expired_at) : null;
+            $previewAktif = $previewExpiry && $previewExpiry->isFuture() && $pesanan->is_preview_active;
         @endphp
         <span class="{{ $statusClass }}">{{ $pesanan->status }}</span>
     </div>
@@ -70,22 +79,58 @@
         </div>
 
         <!-- Preview -->
-        @if($pesanan->status == 'Preview Siap' && $pesanan->is_preview_active)
-        <div class="card bg-blue-50 border border-blue-200">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Preview Tersedia</h2>
-            <p class="text-sm text-gray-700 mb-4">Preview pekerjaan Anda sudah siap untuk dilihat.</p>
-            <a href="{{ $pesanan->preview_link }}" target="_blank" class="btn-primary">
-                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                </svg>
-                Lihat Preview
-            </a>
-        </div>
+        @if($pesanan->preview_link)
+            @if(!$dpLunas)
+            <div class="card bg-yellow-50 border border-yellow-200">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Menunggu Pembayaran DP</h2>
+                <p class="text-sm text-gray-700">
+                    Preview akan aktif setelah pembayaran DP Anda terverifikasi.
+                </p>
+                @if($dpInvoice && $dpInvoice->status !== 'Lunas')
+                <a href="{{ route('client.pembayaran.invoice', $dpInvoice) }}" class="btn-primary mt-4 inline-flex items-center">
+                    <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Bayar DP Sekarang
+                </a>
+                @endif
+            </div>
+            @else
+                @if($previewAktif)
+                <div class="card bg-blue-50 border border-blue-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Preview Tersedia</h2>
+                    <p class="text-sm text-gray-700 mb-2">Preview pekerjaan Anda siap dilihat.</p>
+                    @if($previewExpiry)
+                    <p class="text-xs text-gray-600 mb-4">Aktif hingga {{ $previewExpiry->format('d M Y H:i') }}</p>
+                    @endif
+                    <a href="{{ $pesanan->preview_link }}" target="_blank" class="btn-primary">
+                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Lihat Preview
+                    </a>
+                </div>
+                @else
+                <div class="card bg-red-50 border border-red-200">
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Preview Kadaluarsa</h2>
+                    <p class="text-sm text-gray-700">
+                        Link preview sudah kadaluarsa. Silakan hubungi tim kami untuk meminta perpanjangan.
+                    </p>
+                    <button class="btn-secondary mt-4 inline-flex items-center cursor-not-allowed opacity-60" disabled>
+                        <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        Preview Kadaluarsa
+                    </button>
+                </div>
+                @endif
+            @endif
         @endif
 
         <!-- File Final -->
-        @if($pesanan->status == 'Selesai' && $pesanan->file_final)
+        @if($pesanan->file_final && $pelunasanLunas)
         <div class="card bg-green-50 border border-green-200">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Pekerjaan Selesai</h2>
             <p class="text-sm text-gray-700 mb-4">File final sudah tersedia untuk didownload.</p>
@@ -95,6 +140,19 @@
                 </svg>
                 Download File Final
             </a>
+        </div>
+        @elseif($pesanan->file_final)
+        <div class="card bg-yellow-50 border border-yellow-200">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">File Final Siap</h2>
+            <p class="text-sm text-gray-700">File final sudah disiapkan oleh tim kami. Silakan selesaikan pembayaran pelunasan untuk mengunduh hasil akhir.</p>
+            @if($pelunasanInvoice && $pelunasanInvoice->status !== 'Lunas')
+            <a href="{{ route('client.pembayaran.invoice', $pelunasanInvoice) }}" class="btn-primary mt-4 inline-flex items-center">
+                <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Lanjutkan Pembayaran Pelunasan
+            </a>
+            @endif
         </div>
         @endif
     </div>

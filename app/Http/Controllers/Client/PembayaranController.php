@@ -91,7 +91,7 @@ class PembayaranController extends Controller
         ]);
 
         // Cek invoice
-        $invoice = Invoice::whereHas('pesanan', function($q) {
+        $invoice = Invoice::with('pesanan')->whereHas('pesanan', function($q) {
             $q->where('client_id', Auth::id());
         })->findOrFail($request->invoice_id);
 
@@ -122,6 +122,17 @@ class PembayaranController extends Controller
             'bukti_pembayaran' => $buktiPath,
             'status' => 'Menunggu Verifikasi',
         ]);
+
+        // Update status invoice dan pesanan agar konsisten
+        $invoice->update(['status' => 'Menunggu Verifikasi']);
+
+        if ($invoice->pesanan) {
+            $pesananStatus = $invoice->tipe === 'Pelunasan'
+                ? 'Pelunasan Dibayar - Menunggu Verifikasi'
+                : 'DP Dibayar - Menunggu Verifikasi';
+
+            $invoice->pesanan->update(['status' => $pesananStatus]);
+        }
 
         // Redirect ke halaman success dengan ID pembayaran
         return redirect()->route('client.pembayaran.success', $pembayaran->id)

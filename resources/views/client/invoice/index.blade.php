@@ -10,18 +10,32 @@
 
 <!-- Filter -->
 <div class="card mb-6">
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Filter Status</label>
-            <select name="status" id="status" class="input-field" onchange="this.form.submit()">
-                <option value="">Semua Status</option>
-                <option value="Belum Dibayar" {{ request('status') == 'Belum Dibayar' ? 'selected' : '' }}>Belum Dibayar</option>
-                <option value="Menunggu Verifikasi" {{ request('status') == 'Menunggu Verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
-                <option value="Lunas" {{ request('status') == 'Lunas' ? 'selected' : '' }}>Lunas</option>
-            </select>
-        </div>
-        <div class="flex items-end">
-            <a href="{{ route('client.invoice.index') }}" class="btn-secondary">Reset</a>
+    <form method="GET">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Cari Invoice</label>
+                <input
+                    type="text"
+                    name="search"
+                    id="search"
+                    value="{{ request('search') }}"
+                    placeholder="Nomor invoice, kode pesanan, layanan..."
+                    class="input-field"
+                >
+            </div>
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Filter Status</label>
+                <select name="status" id="status" class="input-field" onchange="this.form.submit()">
+                    <option value="">Semua Status</option>
+                    <option value="Belum Dibayar" {{ request('status') == 'Belum Dibayar' ? 'selected' : '' }}>Belum Dibayar</option>
+                    <option value="Menunggu Verifikasi" {{ request('status') == 'Menunggu Verifikasi' ? 'selected' : '' }}>Menunggu Verifikasi</option>
+                    <option value="Lunas" {{ request('status') == 'Lunas' ? 'selected' : '' }}>Lunas</option>
+                </select>
+            </div>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="btn-primary">Cari</button>
+                <a href="{{ route('client.invoice.index') }}" class="btn-secondary">Reset</a>
+            </div>
         </div>
     </form>
 </div>
@@ -49,7 +63,7 @@
             <div>
                 <p class="text-sm text-gray-500">Pesanan</p>
                 <p class="font-semibold text-gray-900">{{ $invoice->pesanan->kode_pesanan }}</p>
-                <p class="text-sm text-gray-600">{{ $invoice->pesanan->layanan->nama_layanan }}</p>
+                <p class="text-sm text-gray-600">{{ $invoice->pesanan->layanan->nama_layanan ?? $invoice->pesanan->layanan->nama }}</p>
             </div>
             <div>
                 <p class="text-sm text-gray-500">Tipe</p>
@@ -61,22 +75,27 @@
             </div>
         </div>
 
-        <div class="flex items-center justify-between pt-4 border-t">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-4 border-t">
             <div>
                 @if($invoice->is_jatuh_tempo)
-                <p class="text-sm text-red-600">⚠️ Jatuh tempo: {{ $invoice->tanggal_jatuh_tempo->format('d M Y') }}</p>
+                <p class="text-sm text-red-600">&#9888;&#65039; Jatuh tempo: {{ $invoice->tanggal_jatuh_tempo->format('d M Y') }}</p>
                 @else
                 <p class="text-sm text-gray-600">Jatuh tempo: {{ $invoice->tanggal_jatuh_tempo->format('d M Y') }}</p>
                 @endif
             </div>
-            
-            @if($invoice->status != 'Lunas')
-            <a href="{{ route('client.pembayaran.invoice', $invoice) }}" class="btn-primary">
-                Bayar Sekarang
-            </a>
-            @else
-            <span class="text-sm text-green-600 font-semibold">✓ Lunas</span>
-            @endif
+
+            <div class="flex items-center gap-2">
+                <a href="{{ route('client.invoice.download', $invoice) }}" class="btn-secondary">
+                    Download PDF
+                </a>
+                @if($invoice->status != 'Lunas')
+                <a href="{{ route('client.pembayaran.invoice', $invoice) }}" class="btn-primary">
+                    Bayar Sekarang
+                </a>
+                @else
+                <span class="text-sm text-green-600 font-semibold">&#10004; Lunas</span>
+                @endif
+            </div>
         </div>
     </div>
     @endforeach

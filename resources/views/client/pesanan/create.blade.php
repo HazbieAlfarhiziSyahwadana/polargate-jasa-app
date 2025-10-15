@@ -22,7 +22,7 @@
             <div class="card">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Layanan yang Dipilih</h2>
                 <div class="flex items-start space-x-4">
-                    <img src="{{ $layanan->gambar_url }}" alt="{{ $layanan->nama_layanan }}" class="w-24 h-24 object-cover rounded-lg">
+                    <img src="{{ $layanan->gambar_url }}" alt="{{ $layanan->nama_layanan }}" class="w-24 h-24 object-contain rounded-lg bg-gray-100 border border-gray-200">
                     <div>
                         <h3 class="font-bold text-gray-900">{{ $layanan->nama_layanan }}</h3>
                         <span class="badge-info text-xs mt-1">{{ $layanan->kategori }}</span>
