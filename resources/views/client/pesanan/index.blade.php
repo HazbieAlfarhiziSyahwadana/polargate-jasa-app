@@ -33,17 +33,24 @@
 <div class="space-y-4">
     @foreach($pesanan as $item)
     <div class="card hover:shadow-lg transition-shadow">
+        @php
+            $statusClass = 'badge-info';
+            if($item->status == 'Selesai') $statusClass = 'badge-success';
+            if(in_array($item->status, ['Menunggu Pembayaran DP', 'Menunggu Pelunasan'])) $statusClass = 'badge-warning';
+            if($item->status == 'Dibatalkan') $statusClass = 'badge-danger';
+
+            $invoiceDP = $item->invoices->where('tipe', 'DP')->first();
+            $invoicePelunasan = $item->invoices->where('tipe', 'Pelunasan')->first();
+            $dpLunas = $invoiceDP && $invoiceDP->status === 'Lunas';
+            $previewExpiry = $item->preview_expired_at ? \Carbon\Carbon::parse($item->preview_expired_at) : null;
+            $previewAktif = $previewExpiry && $previewExpiry->isFuture() && $item->is_preview_active;
+        @endphp
+
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
             <div>
                 <h3 class="text-lg font-bold text-gray-800">{{ $item->kode_pesanan }}</h3>
                 <p class="text-sm text-gray-600">{{ $item->created_at->format('d M Y H:i') }}</p>
             </div>
-            @php
-                $statusClass = 'badge-info';
-                if($item->status == 'Selesai') $statusClass = 'badge-success';
-                if(in_array($item->status, ['Menunggu Pembayaran DP', 'Menunggu Pelunasan'])) $statusClass = 'badge-warning';
-                if($item->status == 'Dibatalkan') $statusClass = 'badge-danger';
-            @endphp
             <span class="{{ $statusClass }}">{{ $item->status }}</span>
         </div>
 
@@ -59,10 +66,6 @@
             </div>
             <div>
                 <p class="text-sm text-gray-500">Invoice</p>
-                @php
-                    $invoiceDP = $item->invoices->where('tipe', 'DP')->first();
-                    $invoicePelunasan = $item->invoices->where('tipe', 'Pelunasan')->first();
-                @endphp
                 @if($invoiceDP)
                 <p class="text-xs">DP: 
                     <span class="{{ $invoiceDP->status == 'Lunas' ? 'text-green-600' : 'text-red-600' }}">
@@ -97,10 +100,22 @@
             @endif
             @endif
 
-            @if($item->status == 'Preview Siap' && $item->is_preview_active)
-            <a href="{{ $item->preview_link }}" target="_blank" class="btn-secondary text-sm">
-                Lihat Preview
-            </a>
+            @if($item->status == 'Preview Siap')
+                @if(!$dpLunas)
+                    @if($invoiceDP && $invoiceDP->status !== 'Lunas')
+                    <a href="{{ route('client.pembayaran.invoice', $invoiceDP) }}" class="btn-secondary text-sm">
+                        Bayar DP untuk Preview
+                    </a>
+                    @endif
+                @elseif($previewAktif)
+                <a href="{{ $item->preview_link }}" target="_blank" class="btn-secondary text-sm">
+                    Lihat Preview
+                </a>
+                @else
+                <button class="btn-secondary text-sm cursor-not-allowed opacity-60" disabled>
+                    Preview Kadaluarsa
+                </button>
+                @endif
             @endif
 
             @if($item->status == 'Selesai' && $item->file_final)

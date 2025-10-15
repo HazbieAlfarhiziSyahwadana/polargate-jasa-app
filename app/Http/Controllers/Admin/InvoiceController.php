@@ -9,6 +9,7 @@ use App\Models\Pesanan;
 use App\Models\Pembayaran;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -183,15 +184,19 @@ class InvoiceController extends Controller
             ->with('success', 'Pembayaran ditolak. Client akan diminta upload ulang bukti pembayaran.');
     }
 
-    public function print(Invoice $invoice)
+    public function download(Invoice $invoice)
     {
         $invoice->load([
             'pesanan.client',
             'pesanan.layanan',
             'pesanan.paket',
-            'pesanan.pesananAddons.addon',
+            'pesanan.addons',
         ]);
 
-        return view('admin.invoice.print', compact('invoice'));
+        $pdf = Pdf::loadView('pdf.invoice', [
+            'invoice' => $invoice,
+        ])->setPaper('a4');
+
+        return $pdf->download('invoice-' . $invoice->nomor_invoice . '.pdf');
     }
 }

@@ -21,6 +21,7 @@ class Pesanan extends Model
         'total_harga',
         'status',
         'preview_link',
+        'preview_expired_at',
         'is_preview_active',
         'file_final',
         'file_pendukung',
@@ -31,6 +32,9 @@ class Pesanan extends Model
         'harga_paket' => 'decimal:2',
         'total_harga' => 'decimal:2',
         'is_preview_active' => 'boolean',
+        'preview_expired_at' => 'datetime',
+        'file_final' => 'array',
+        'file_pendukung' => 'array',
     ];
 
     // Relasi
@@ -56,8 +60,19 @@ class Pesanan extends Model
             ->withTimestamps();
     }
 
+    public function pesananAddons()
+    {
+        return $this->hasMany(PesananAddon::class);
+    }
+
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
     }
+
+    public function revisi()
+    {
+        return $this->hasMany(Revisi::class);
+    }
 }
+

@@ -13,7 +13,7 @@ class PembayaranController extends Controller
     public function pending()
     {
         $pembayaran = Pembayaran::with(['invoice.pesanan.client', 'invoice.pesanan.layanan'])
-            ->where('status', 'Pending')
+            ->where('status', 'Menunggu Verifikasi')
             ->latest()
             ->paginate(10);
 
@@ -66,7 +66,17 @@ class PembayaranController extends Controller
         ]);
 
         // Kembalikan status invoice ke Belum Dibayar
-        $pembayaran->invoice->update(['status' => 'Belum Dibayar']);
+        $invoice = $pembayaran->invoice;
+        $invoice->update(['status' => 'Belum Dibayar']);
+
+        $pesanan = $invoice->pesanan;
+        if ($pesanan) {
+            $pesanan->update([
+                'status' => $invoice->tipe === 'Pelunasan'
+                    ? 'Menunggu Pelunasan'
+                    : 'Menunggu Pembayaran DP'
+            ]);
+        }
 
         return redirect()->route('admin.pembayaran.pending')->with('success', 'Pembayaran ditolak!');
     }

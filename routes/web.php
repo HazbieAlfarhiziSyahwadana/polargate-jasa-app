@@ -99,7 +99,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
         Route::post('/{pesanan}/create-dp', [AdminInvoiceController::class, 'createDP'])->name('create-dp');
         Route::post('/{pesanan}/create-pelunasan', [AdminInvoiceController::class, 'createPelunasan'])->name('create-pelunasan');
         Route::get('/{invoice}', [AdminInvoiceController::class, 'show'])->name('show');
-        Route::get('/{invoice}/print', [AdminInvoiceController::class, 'print'])->name('print');
+        Route::get('/{invoice}/download', [AdminInvoiceController::class, 'download'])->name('download');
     });
 
     // Verifikasi Pembayaran
@@ -174,7 +174,7 @@ Route::prefix('client')->middleware(['auth', 'client'])->name('client.')->group(
         Route::post('/{invoice_id}/store', [ClientPembayaranController::class, 'store'])->name('store.invoice');
         Route::get('/{invoice_id}/show', [ClientPembayaranController::class, 'show'])->name('show');
         Route::delete('/{pembayaran_id}', [ClientPembayaranController::class, 'destroy'])->name('destroy');
-        Route::get('/success', [ClientPembayaranController::class, 'success'])->name('success');
+        Route::get('/success/{pembayaran}', [ClientPembayaranController::class, 'success'])->name('success');
     });
 
     // Profil Client

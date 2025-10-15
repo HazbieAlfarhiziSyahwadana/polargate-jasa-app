@@ -10,11 +10,11 @@
             <p class="text-gray-600">Detail invoice pembayaran</p>
         </div>
         <div class="flex space-x-2">
-            <a href="{{ route('admin.invoice.print', $invoice) }}" target="_blank" class="btn-primary">
+            <a href="{{ route('admin.invoice.download', $invoice) }}" class="btn-primary">
                 <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4 4m0 0l-4-4m4 4V4"/>
                 </svg>
-                Print Invoice
+                Download PDF
             </a>
             <a href="{{ route('admin.invoice.index') }}" class="btn-secondary">Kembali</a>
         </div>
@@ -154,7 +154,7 @@
                     <p class="text-xs text-gray-600">Via {{ $pembayaran->metode_pembayaran }}</p>
                     
                     @if($pembayaran->bukti_pembayaran)
-                    <a href="{{ asset('uploads/pembayaran/' . $pembayaran->bukti_pembayaran) }}" target="_blank" class="text-xs text-blue-600 hover:underline block mt-2">
+                    <a href="{{ asset('storage/' . $pembayaran->bukti_pembayaran) }}" target="_blank" class="text-xs text-blue-600 hover:underline block mt-2">
                         Lihat Bukti Transfer
                     </a>
                     @endif
@@ -194,3 +194,6 @@
     </div>
 </div>
 @endsection
+
+
+

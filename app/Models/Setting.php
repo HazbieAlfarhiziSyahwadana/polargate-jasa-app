@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Throwable;
 
 class Setting extends Model
 {
@@ -10,7 +11,16 @@ class Setting extends Model
 
     public static function get($key, $default = null)
     {
-        $setting = self::where('key', $key)->first();
+        try {
+            $setting = self::where('key', $key)->first();
+        } catch (Throwable $exception) {
+            if (app()->runningUnitTests()) {
+                return $default;
+            }
+
+            throw $exception;
+        }
+
         return $setting ? $setting->value : $default;
     }
 

@@ -55,7 +55,7 @@ class PesananController extends Controller
     public function updateStatus(Request $request, Pesanan $pesanan)
     {
         $validated = $request->validate([
-            'status' => 'required|in:Sedang Diproses,Preview Siap,Selesai,Dibatalkan',
+            'status' => 'required|in:Menunggu Pembayaran DP,DP Dibayar - Menunggu Verifikasi,Sedang Diproses,Preview Siap,Revisi Diminta,Menunggu Pelunasan,Pelunasan Dibayar - Menunggu Verifikasi,Selesai,Dibatalkan',
             'catatan' => 'nullable|string',
         ]);
 
@@ -70,21 +70,65 @@ class PesananController extends Controller
     {
         $validated = $request->validate([
             'preview_link' => 'required|url',
+            'duration_hours' => 'nullable|integer|in:6,12,24,48,72,168',
         ], [
             'preview_link.required' => 'Link preview wajib diisi.',
             'preview_link.url' => 'Link preview harus berupa URL yang valid.',
         ]);
 
-        // Set expired 24 jam dari sekarang
-        $expiredAt = Carbon::now()->addHours(24);
+        $duration = $validated['duration_hours'] ?? 24;
+        $duration = (int) $duration;
+        $expiredAt = Carbon::now()->addHours($duration);
 
         $pesanan->update([
             'preview_link' => $validated['preview_link'],
             'preview_expired_at' => $expiredAt,
+            'is_preview_active' => true,
             'status' => 'Preview Siap'
         ]);
 
-        return redirect()->back()->with('success', 'Preview berhasil diunggah! Link akan kadaluarsa dalam 24 jam.');
+        return redirect()->back()->with('success', "Preview berhasil diunggah dan aktif {$duration} jam.");
+    }
+
+    public function extendPreview(Request $request, Pesanan $pesanan)
+    {
+        if (!$pesanan->preview_link) {
+            return redirect()->back()->with('error', 'Tidak ada preview yang bisa diperpanjang.');
+        }
+
+        $validated = $request->validate([
+            'duration_hours' => 'required|integer|in:6,12,24,48,72,168',
+        ]);
+
+        $baseTime = $pesanan->preview_expired_at && Carbon::parse($pesanan->preview_expired_at)->isFuture()
+            ? Carbon::parse($pesanan->preview_expired_at)
+            : Carbon::now();
+
+        $hoursToAdd = (int) $validated['duration_hours'];
+        $newExpiry = $baseTime->copy()->addHours($hoursToAdd);
+
+        $pesanan->update([
+            'preview_expired_at' => $newExpiry,
+            'is_preview_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', "Link preview diperpanjang {$hoursToAdd} jam.");
+    }
+
+    public function deletePreview(Pesanan $pesanan)
+    {
+        if (!$pesanan->preview_link) {
+            return redirect()->back()->with('error', 'Preview sudah tidak tersedia.');
+        }
+
+        $pesanan->update([
+            'preview_link' => null,
+            'preview_expired_at' => null,
+            'is_preview_active' => false,
+            'status' => 'Sedang Diproses',
+        ]);
+
+        return redirect()->back()->with('success', 'Preview berhasil dihapus.');
     }
 
     public function uploadFinal(Request $request, Pesanan $pesanan)
@@ -103,11 +147,20 @@ class PesananController extends Controller
             'final'
         );
 
+        $existingFiles = $pesanan->file_final ?? [];
+        if (is_string($existingFiles)) {
+            $decoded = json_decode($existingFiles, true);
+            $existingFiles = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!empty($existingFiles)) {
+            FileHelper::deleteMultipleFiles('final', $existingFiles);
+        }
+
         $pesanan->update([
-            'file_final' => $uploadedFiles,
-            'status' => 'Selesai'
+            'file_final' => $uploadedFiles
         ]);
 
-        return redirect()->back()->with('success', 'File final berhasil diunggah!');
+        return redirect()->back()->with('success', 'File final berhasil diperbarui dan akan tersedia setelah pelunasan lunas.');
     }
 }

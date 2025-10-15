@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceController extends Controller
 {
@@ -56,7 +57,10 @@ class InvoiceController extends Controller
         })
         ->findOrFail($id);
 
-        // Generate PDF (opsional, bisa pakai package seperti DomPDF atau Snappy)
-        return view('client.invoice.pdf', compact('invoice'));
+        $pdf = Pdf::loadView('pdf.invoice', [
+            'invoice' => $invoice,
+        ])->setPaper('a4');
+
+        return $pdf->download('invoice-' . $invoice->nomor_invoice . '.pdf');
     }
 }
