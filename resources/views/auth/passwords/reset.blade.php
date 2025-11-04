@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
-@section('title', 'Login - Polargate')
+@section('title', 'Reset Password - Polargate')
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style="background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);">
     <!-- Floating Background Elements -->
-    <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute w-96 h-96 bg-white opacity-5 rounded-full -top-20 -left-20 animate-pulse"></div>
         <div class="absolute w-80 h-80 bg-white opacity-5 rounded-full top-40 -right-20 animate-pulse" style="animation-delay: 2s;"></div>
         <div class="absolute w-64 h-64 bg-white opacity-5 rounded-full -bottom-10 left-1/3 animate-pulse" style="animation-delay: 4s;"></div>
@@ -16,25 +16,18 @@
             <!-- Logo & Title -->
             <div class="text-center mb-8 animate-fadeIn">
                 <div class="inline-block p-3 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl mb-4 shadow-lg transform hover:scale-110 hover:rotate-3 transition-all duration-300">
-                    <i class="fas fa-user-shield text-white text-3xl"></i>
+                    <i class="fas fa-lock-open text-white text-3xl"></i>
                 </div>
                 <h1 class="text-4xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent mb-2 animate-gradient">
-                    Selamat Datang
+                    Reset Password
                 </h1>
-                <p class="text-gray-600">Silakan login untuk melanjutkan</p>
+                <p class="text-gray-600 text-sm sm:text-base">Masukkan password baru Anda</p>
             </div>
 
             <!-- Flash Messages -->
-            @if(session('success'))
-            <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-r-lg flex items-center animate-slideInLeft">
-                <i class="fas fa-check-circle mr-3"></i>
-                <span class="text-sm">{{ session('success') }}</span>
-            </div>
-            @endif
-
             @if(session('status'))
-            <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-r-lg flex items-center animate-slideInLeft">
-                <i class="fas fa-check-circle mr-3"></i>
+            <div class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded-r-lg flex items-start animate-slideInLeft">
+                <i class="fas fa-check-circle mr-3 mt-0.5 flex-shrink-0"></i>
                 <span class="text-sm">{{ session('status') }}</span>
             </div>
             @endif
@@ -42,7 +35,7 @@
             @if($errors->any())
             <div class="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-r-lg animate-shake">
                 <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle mt-0.5 mr-3"></i>
+                    <i class="fas fa-exclamation-circle mt-0.5 mr-3 flex-shrink-0"></i>
                     <ul class="text-sm space-y-1">
                         @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -52,10 +45,12 @@
             </div>
             @endif
 
-            <!-- Login Form -->
-            <form method="POST" action="{{ route('login') }}" class="space-y-5">
+            <!-- Reset Password Form -->
+            <form method="POST" action="{{ route('password.update') }}" class="space-y-5">
                 @csrf
+                <input type="hidden" name="token" value="{{ $token }}">
 
+                <!-- Email Field -->
                 <div class="form-group animate-slideInLeft" style="animation-delay: 0.1s;">
                     <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">
                         <i class="fas fa-envelope mr-2 text-primary-600"></i>Email
@@ -65,18 +60,23 @@
                             type="email" 
                             name="email" 
                             id="email" 
-                            value="{{ old('email') }}"
-                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 hover:border-primary-300 @error('email') border-red-500 @enderror" 
+                            value="{{ $email ?? old('email') }}"
+                            class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 hover:border-primary-300 bg-gray-50 @error('email') border-red-500 @enderror" 
                             placeholder="nama@email.com"
                             required
+                            readonly
                         >
                         <div class="input-border"></div>
                     </div>
+                    @error('email')
+                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
                 </div>
 
+                <!-- Password Field -->
                 <div class="form-group animate-slideInLeft" style="animation-delay: 0.2s;">
                     <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">
-                        <i class="fas fa-lock mr-2 text-primary-600"></i>Password
+                        <i class="fas fa-lock mr-2 text-primary-600"></i>Password Baru
                     </label>
                     <div class="input-wrapper relative">
                         <input 
@@ -84,66 +84,89 @@
                             name="password" 
                             id="password" 
                             class="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 hover:border-primary-300 @error('password') border-red-500 @enderror" 
-                            placeholder="Masukkan password"
+                            placeholder="Masukkan password baru"
+                            required
+                            autofocus
+                        >
+                        <button type="button" onclick="togglePassword('password', 'toggleIcon1')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 transition-all duration-300 hover:scale-110 focus:outline-none">
+                            <i class="fas fa-eye" id="toggleIcon1"></i>
+                        </button>
+                        <div class="input-border"></div>
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 flex items-center">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Minimal 8 karakter
+                    </p>
+                    @error('password')
+                    <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Password Confirmation Field -->
+                <div class="form-group animate-slideInLeft" style="animation-delay: 0.3s;">
+                    <label for="password_confirmation" class="block text-gray-700 text-sm font-semibold mb-2">
+                        <i class="fas fa-lock mr-2 text-primary-600"></i>Konfirmasi Password
+                    </label>
+                    <div class="input-wrapper relative">
+                        <input 
+                            type="password" 
+                            name="password_confirmation" 
+                            id="password_confirmation" 
+                            class="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 hover:border-primary-300" 
+                            placeholder="Konfirmasi password baru"
                             required
                         >
-                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 transition-all duration-300 hover:scale-110">
-                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        <button type="button" onclick="togglePassword('password_confirmation', 'toggleIcon2')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary-600 transition-all duration-300 hover:scale-110 focus:outline-none">
+                            <i class="fas fa-eye" id="toggleIcon2"></i>
                         </button>
                         <div class="input-border"></div>
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between animate-slideInLeft" style="animation-delay: 0.3s;">
-                    <label class="flex items-center cursor-pointer group">
-                        <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer transition-all duration-300">
-                        <span class="ml-2 text-sm text-gray-600 group-hover:text-primary-600 transition-colors duration-300">Ingat Saya</span>
-                    </label>
-                </div>
-
+                <!-- Submit Button -->
                 <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] animate-slideInLeft" style="animation-delay: 0.4s;">
-                    <i class="fas fa-sign-in-alt mr-2"></i>Login Sekarang
+                    <i class="fas fa-check-circle mr-2"></i>Reset Password
                 </button>
             </form>
 
-            <!-- Forgot Password Link -->
-            <div class="mt-4 text-center animate-fadeIn" style="animation-delay: 0.5s;">
-                <a href="{{ route('password.request') }}" class="text-sm text-blue-500 hover:text-blue-700 transition-colors duration-300">
-                    Lupa Password?
+            <!-- Back to Login -->
+            <div class="mt-6 text-center animate-fadeIn" style="animation-delay: 0.5s;">
+                <a href="{{ route('login') }}" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-semibold group transition-all duration-300">
+                    <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform duration-300"></i>
+                    Kembali ke Login
                 </a>
             </div>
 
-            <!-- Register Link -->
-            <div class="mt-8 text-center animate-fadeIn" style="animation-delay: 0.5s;">
-                <p class="text-gray-600 mb-4">
-                    Belum punya akun? 
-                    <a href="{{ route('register') }}" class="text-primary-600 hover:text-primary-700 font-semibold hover:underline inline-flex items-center group transition-all duration-300">
-                        Daftar Sekarang 
-                        <i class="fas fa-arrow-right ml-1 text-xs group-hover:translate-x-1 transition-transform duration-300"></i>
-                    </a>
-                </p>
-                
-                <!-- Back to Landing Page Button -->
-                <a href="{{ route('landing') }}" class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-gray-100 to-gray-200 hover:from-gray-200 hover:to-gray-300 text-gray-700 rounded-full transition-all duration-300 shadow-sm hover:shadow-md border border-gray-300 hover:scale-105 transform">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    <span class="font-medium">Kembali ke Beranda</span>
-                </a>
+            <!-- Security Info -->
+            <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl animate-fadeIn" style="animation-delay: 0.6s;">
+                <div class="flex items-start">
+                    <i class="fas fa-shield-alt text-blue-600 mt-0.5 mr-3 flex-shrink-0"></i>
+                    <div class="text-xs text-blue-800">
+                        <p class="font-semibold mb-1">Tips Keamanan:</p>
+                        <ul class="space-y-1 list-disc list-inside">
+                            <li>Gunakan kombinasi huruf besar, kecil, dan angka</li>
+                            <li>Jangan gunakan password yang mudah ditebak</li>
+                            <li>Simpan password Anda dengan aman</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Footer Text -->
-        <div class="text-center mt-6 animate-fadeIn" style="animation-delay: 0.8s;">
+        <div class="text-center mt-6 animate-fadeIn" style="animation-delay: 0.7s;">
             <p class="text-white text-opacity-80 text-sm">
-                © 2025 PT Polargate Indonesia Kreasi
+                © {{ date('Y') }} PT Polargate Indonesia Kreasi
             </p>
         </div>
     </div>
 </div>
 
+@push('scripts')
 <script>
-function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    const toggleIcon = document.getElementById('toggleIcon');
+function togglePassword(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleIcon = document.getElementById(iconId);
     
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
@@ -166,10 +189,32 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
         this.parentElement.classList.remove('input-focused');
     });
 });
-</script>
 
+// Password strength indicator
+const passwordInput = document.getElementById('password');
+if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        const strength = checkPasswordStrength(password);
+        // You can add visual feedback here
+    });
+}
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (password.match(/[a-z]+/)) strength++;
+    if (password.match(/[A-Z]+/)) strength++;
+    if (password.match(/[0-9]+/)) strength++;
+    if (password.match(/[$@#&!]+/)) strength++;
+    return strength;
+}
+</script>
+@endpush
+
+@push('styles')
 <style>
-/* Background Pulse Animation */
+/* Reuse same animations as email.blade.php */
 @keyframes pulse {
     0%, 100% {
         opacity: 0.05;
@@ -185,7 +230,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     animation: pulse 6s ease-in-out infinite;
 }
 
-/* Fade In Up Animation */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -201,7 +245,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     animation: fadeInUp 0.6s ease-out;
 }
 
-/* Fade In Animation */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -216,23 +259,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     opacity: 0;
 }
 
-/* Slide Down Animation */
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-slideDown {
-    animation: slideDown 0.6s ease-out;
-}
-
-/* Slide In Left Animation */
 @keyframes slideInLeft {
     from {
         opacity: 0;
@@ -249,7 +275,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     opacity: 0;
 }
 
-/* Shake Animation for Errors */
 @keyframes shake {
     0%, 100% { transform: translateX(0); }
     10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
@@ -260,7 +285,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     animation: shake 0.5s ease-in-out;
 }
 
-/* Gradient Animation */
 @keyframes gradient {
     0% {
         background-position: 0% 50%;
@@ -278,21 +302,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     animation: gradient 3s ease infinite;
 }
 
-/* Slow Bounce Animation */
-@keyframes bounce-slow {
-    0%, 100% {
-        transform: translateY(0);
-    }
-    50% {
-        transform: translateY(-5px);
-    }
-}
-
-.animate-bounce-slow {
-    animation: bounce-slow 2s ease-in-out infinite;
-}
-
-/* Input Focus Effect */
 .input-wrapper {
     position: relative;
 }
@@ -312,7 +321,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     width: 100%;
 }
 
-/* Form Group Animation */
 .form-group {
     transition: transform 0.3s ease;
 }
@@ -321,12 +329,10 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     transform: translateX(3px);
 }
 
-/* Enhanced Shadow */
 .shadow-3xl {
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* Responsive Adjustments */
 @media (max-width: 640px) {
     .animate-fadeInUp {
         animation: fadeInUp 0.4s ease-out;
@@ -337,7 +343,6 @@ document.querySelectorAll('input[type="email"], input[type="password"]').forEach
     }
 }
 
-/* Smooth Transitions for All Interactive Elements */
 * {
     -webkit-tap-highlight-color: transparent;
 }
@@ -346,4 +351,5 @@ button, a, input, label {
     transition: all 0.3s ease;
 }
 </style>
+@endpush
 @endsection

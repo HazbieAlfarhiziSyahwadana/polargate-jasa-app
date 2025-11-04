@@ -6,6 +6,17 @@
 <div class="mb-6">
     <h1 class="text-3xl font-bold text-gray-800">Verifikasi Pembayaran</h1>
     <p class="text-gray-600">Pembayaran yang menunggu verifikasi</p>
+    
+    <!-- Menampilkan Notifikasi Pembayaran Masuk -->
+    @if($pembayaran->count() > 0)
+        <div class="text-xl font-semibold text-green-600">
+            <span>{{ $pembayaran->count() }} Pembayaran Menunggu Verifikasi</span>
+        </div>
+    @else
+        <div class="text-xl font-semibold text-red-600">
+            <span>Tidak Ada Pembayaran Pending</span>
+        </div>
+    @endif
 </div>
 
 @if($pembayaran->count() > 0)
@@ -17,6 +28,11 @@
                 <h3 class="font-bold text-gray-800">{{ $item->invoice->nomor_invoice }}</h3>
                 <p class="text-sm text-gray-600">{{ $item->invoice->pesanan->kode_pesanan }}</p>
             </div>
+            
+            <!-- Tanda Pembayaran Baru Masuk -->
+            @if($item->created_at->isToday())
+                <span class="badge-new bg-blue-500 text-white px-2 py-1 rounded-full text-xs">Baru</span>
+            @endif
             <span class="badge-warning">Pending</span>
         </div>
 

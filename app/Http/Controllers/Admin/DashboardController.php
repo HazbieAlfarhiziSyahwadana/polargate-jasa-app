@@ -35,7 +35,7 @@ class DashboardController extends Controller
                 ->get(),
             'layanan_populer' => Layanan::withCount('pesanan')
                 ->orderBy('pesanan_count', 'desc')
-                ->take(5)
+                ->take(10)
                 ->get(),
             'pembayaran_pending' => Pembayaran::where('status', 'Menunggu Verifikasi')
                 ->with(['invoice.pesanan.client'])

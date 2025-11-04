@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\LayananController as AdminLayananController;
@@ -22,16 +24,50 @@ use App\Http\Controllers\Client\InvoiceController as ClientInvoiceController;
 use App\Http\Controllers\Client\PembayaranController as ClientPembayaranController;
 use App\Http\Controllers\Client\ProfilController as ClientProfilController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "web" middleware group. Make something great!
+|
+*/
+
 // ===== LANDING PAGE =====
 Route::get('/', [LandingController::class, 'index'])->name('landing');
 
 // ===== ROUTE AUTHENTICATION =====
+// Login
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
+// Register
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
+
+// ===== PASSWORD RESET ROUTES =====
+// Halaman form request reset password (lupa password)
+Route::get('password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->name('password.request')
+    ->middleware('guest');
+
+// Kirim link reset password ke email
+Route::post('password/email', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->name('password.email')
+    ->middleware('guest');
+
+// Halaman form reset password (dengan token)
+Route::get('password/reset/{token}', [ResetPasswordController::class, 'showResetForm'])
+    ->name('password.reset')
+    ->middleware('guest');
+
+// Proses reset password
+Route::post('password/reset', [ResetPasswordController::class, 'reset'])
+    ->name('password.update')
+    ->middleware('guest');
 
 // ===== ROUTE ADMIN (SUPERADMIN) =====
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
@@ -122,7 +158,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
         Route::get('/export-pemesanan', [AdminLaporanController::class, 'exportPemesanan'])->name('export-pemesanan');
     });
 
-    // Pengaturan Landing Page (NEW)
+    // Pengaturan Landing Page
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [AdminSettingController::class, 'index'])->name('index');
         Route::post('/update-logo', [AdminSettingController::class, 'updateLogo'])->name('update-logo');

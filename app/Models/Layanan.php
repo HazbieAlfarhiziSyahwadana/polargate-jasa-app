@@ -41,6 +41,12 @@ class Layanan extends Model
         return $this->hasMany(Pesanan::class);
     }
 
+    // Scope untuk layanan aktif
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     // Accessor untuk URL gambar
     public function getGambarUrlAttribute()
     {

@@ -3,24 +3,116 @@
 @section('title', 'Detail Pesanan')
 
 @section('content')
-<div class="mb-6">
-    <div class="flex items-center justify-between">
+<style>
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Animasi hanya untuk first load */
+    .page-load .animate-fade {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .page-load .animate-slide {
+        animation: slideUp 0.5s ease-out;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .page-load .delay-100 { animation-delay: 0.1s; }
+    .page-load .delay-200 { animation-delay: 0.2s; }
+    .page-load .delay-300 { animation-delay: 0.3s; }
+    .page-load .delay-400 { animation-delay: 0.4s; }
+    .page-load .delay-500 { animation-delay: 0.5s; }
+
+    .card {
+        transition: box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-primary, .btn-secondary, .btn-info, .btn-danger, .btn-sm {
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover, .btn-secondary:hover, .btn-info:hover, .btn-danger:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .btn-primary:active, .btn-secondary:active {
+        transform: translateY(0);
+    }
+
+    .input-field, select {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .input-field:focus, select:focus {
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .file-item {
+        transition: all 0.2s ease;
+    }
+
+    .file-item:hover {
+        background-color: #f3f4f6;
+        transform: translateX(4px);
+    }
+
+    .progress-bar {
+        transition: width 1s ease-out;
+    }
+
+    @media (max-width: 1024px) {
+        .grid-cols-1.lg\\:grid-cols-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="mb-6 animate-fade">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Detail Pesanan {{ $pesanan->kode_pesanan }}</h1>
-            <p class="text-gray-600">Informasi lengkap pesanan</p>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Detail Pesanan {{ $pesanan->kode_pesanan }}</h1>
+            <p class="text-gray-600 mt-1">Informasi lengkap pesanan</p>
         </div>
-        <a href="{{ route('admin.pesanan.index') }}" class="btn-secondary">Kembali</a>
+        <a href="{{ route('admin.pesanan.index') }}" class="btn-secondary w-full sm:w-auto text-center inline-flex items-center justify-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Kembali
+        </a>
     </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
     <!-- Informasi Pesanan -->
-    <div class="lg:col-span-2 space-y-6">
+    <div class="lg:col-span-2 space-y-4 lg:space-y-6">
         <!-- Status & Info Umum -->
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Informasi Pesanan</h2>
+        <div class="card animate-slide">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Informasi Pesanan</h2>
             
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <p class="text-sm text-gray-500">Kode Pesanan</p>
                     <p class="font-semibold text-gray-900">{{ $pesanan->kode_pesanan }}</p>
@@ -50,7 +142,7 @@
                 @csrf
                 @method('PATCH')
                 <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Update Status Pesanan</label>
-                <div class="flex gap-2">
+                <div class="flex flex-col sm:flex-row gap-2">
                     @php
                         $statusOptions = [
                             'Menunggu Pembayaran DP',
@@ -71,14 +163,14 @@
                             </option>
                         @endforeach
                     </select>
-                    <button type="submit" class="btn-primary">Update</button>
+                    <button type="submit" class="btn-primary w-full sm:w-auto">Update</button>
                 </div>
             </form>
         </div>
 
         <!-- Detail Layanan -->
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Detail Layanan</h2>
+        <div class="card animate-slide delay-100">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Detail Layanan</h2>
             
             <div class="space-y-4">
                 <div>
@@ -88,13 +180,13 @@
                 </div>
                 
                 @if($pesanan->paket)
-                <div>
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
                     <p class="text-sm text-gray-500">Paket</p>
                     <p class="font-semibold text-gray-900">{{ $pesanan->paket->nama }}</p>
                     <p class="text-sm text-gray-600">Rp {{ number_format($pesanan->paket->harga, 0, ',', '.') }}</p>
                     <div class="mt-2">
                         <p class="text-xs text-gray-500">Fitur:</p>
-                        <ul class="list-disc list-inside text-sm text-gray-600">
+                        <ul class="list-disc list-inside text-sm text-gray-600 space-y-1">
                             @if(is_array($pesanan->paket->fitur))
                                 @foreach($pesanan->paket->fitur as $fitur)
                                     <li>{{ $fitur }}</li>
@@ -116,33 +208,34 @@
                 </div>
                 @endif
 
-                {{-- ✅ PERBAIKAN: Ganti pesananAddons jadi addons --}}
                 @if($pesanan->addons->count() > 0)
                 <div>
                     <p class="text-sm text-gray-500 mb-2">Add-ons</p>
-                    @foreach($pesanan->addons as $addon)
-                    <div class="flex justify-between items-center bg-gray-50 p-3 rounded mb-2">
-                        <div>
-                            <p class="font-medium text-gray-900">{{ $addon->nama }}</p>
-                            <p class="text-xs text-gray-600">{{ $addon->deskripsi }}</p>
+                    <div class="space-y-2">
+                        @foreach($pesanan->addons as $addon)
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-gray-50 p-3 rounded file-item gap-2">
+                            <div>
+                                <p class="font-medium text-gray-900">{{ $addon->nama }}</p>
+                                <p class="text-xs text-gray-600">{{ $addon->deskripsi }}</p>
+                            </div>
+                            <p class="font-semibold text-gray-900 text-sm sm:text-base">Rp {{ number_format($addon->pivot->harga, 0, ',', '.') }}</p>
                         </div>
-                        <p class="font-semibold text-gray-900">Rp {{ number_format($addon->pivot->harga, 0, ',', '.') }}</p>
+                        @endforeach
                     </div>
-                    @endforeach
                 </div>
                 @endif
             </div>
         </div>
 
         <!-- Brief & Referensi -->
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Brief & Referensi</h2>
+        <div class="card animate-slide delay-200">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Brief & Referensi</h2>
             
             <div class="space-y-4">
                 <div>
                     <p class="text-sm text-gray-500 mb-2">Brief dari Client</p>
-                    <div class="bg-gray-50 p-4 rounded">
-                        <p class="text-gray-700 whitespace-pre-line">{{ $pesanan->brief }}</p>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-gray-700 whitespace-pre-line text-sm">{{ $pesanan->brief }}</p>
                     </div>
                 </div>
 
@@ -160,11 +253,11 @@
                             @php
                                 $fileUrl = asset('uploads/pesanan/' . ltrim($file, '/'));
                             @endphp
-                            <a href="{{ $fileUrl }}" target="_blank" class="flex items-center bg-gray-50 p-3 rounded hover:bg-gray-100">
-                                <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <a href="{{ $fileUrl }}" target="_blank" class="flex items-center bg-gray-50 p-3 rounded hover:bg-gray-100 file-item">
+                                <svg class="w-5 h-5 text-gray-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
-                                <span class="text-sm text-gray-700">{{ basename($file) }}</span>
+                                <span class="text-sm text-gray-700 truncate">{{ basename($file) }}</span>
                             </a>
                             @endforeach
                         </div>
@@ -176,40 +269,44 @@
 
         <!-- Upload Preview -->
         @if(in_array($pesanan->status, ['Sedang Diproses', 'Revisi Diminta', 'Preview Siap', 'Menunggu Pelunasan']))
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Upload Preview</h2>
+        <div class="card animate-slide delay-300">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Upload Preview</h2>
             
             <form action="{{ route('admin.pesanan.upload-preview', $pesanan) }}" method="POST">
                 @csrf
-                <div>
-                    <label for="preview_link" class="block text-sm font-medium text-gray-700 mb-2">Link Preview (Berlaku 24 jam)</label>
-                    <input type="url" name="preview_link" id="preview_link" class="input-field" placeholder="https://drive.google.com/..." value="{{ old('preview_link', $pesanan->preview_link) }}" required>
-                    <p class="text-xs text-gray-500 mt-1">Upload file preview ke Google Drive/Dropbox dan masukkan link sharingnya.</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="preview_link" class="block text-sm font-medium text-gray-700 mb-2">Link Preview</label>
+                        <input type="url" name="preview_link" id="preview_link" class="input-field w-full" placeholder="https://drive.google.com/..." value="{{ old('preview_link', $pesanan->preview_link) }}" required>
+                        <p class="text-xs text-gray-500 mt-1">Upload file preview ke Google Drive/Dropbox dan masukkan link sharingnya.</p>
+                    </div>
+                    <div>
+                        <label for="duration_hours" class="block text-sm font-medium text-gray-700 mb-2">Masa aktif link</label>
+                        <select name="duration_hours" id="duration_hours" class="input-field w-full">
+                            <option value="6">6 jam</option>
+                            <option value="12">12 jam</option>
+                            <option value="24" selected>24 jam</option>
+                            <option value="48">48 jam</option>
+                            <option value="72">72 jam</option>
+                            <option value="168">7 hari</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary w-full sm:w-auto">Upload Preview</button>
                 </div>
-                <div class="mt-4">
-                    <label for="duration_hours" class="block text-sm font-medium text-gray-700 mb-2">Masa aktif link</label>
-                    <select name="duration_hours" id="duration_hours" class="input-field">
-                        <option value="6">6 jam</option>
-                        <option value="12">12 jam</option>
-                        <option value="24" selected>24 jam</option>
-                        <option value="48">48 jam</option>
-                        <option value="72">72 jam</option>
-                        <option value="168">7 hari</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn-primary mt-4">Upload Preview</button>
             </form>
         </div>
-        @endif        <!-- Preview Link -->
+        @endif
+
+        <!-- Preview Link -->
         @if($pesanan->preview_link)
-        <div class="card">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-xl font-bold text-gray-800">Preview</h2>
-                <div class="flex gap-2">
+        <div class="card animate-slide delay-300">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800">Preview</h2>
+                <div class="flex flex-wrap gap-2">
                     <form action="{{ route('admin.pesanan.extend-preview', $pesanan) }}" method="POST" class="flex items-center gap-2">
                         @csrf
                         @method('PATCH')
-                        <select name="duration_hours" class="input-field input-field-sm w-28">
+                        <select name="duration_hours" class="input-field text-sm py-1 px-2">
                             <option value="6">+6 jam</option>
                             <option value="12">+12 jam</option>
                             <option value="24" selected>+24 jam</option>
@@ -217,38 +314,32 @@
                             <option value="72">+72 jam</option>
                             <option value="168">+7 hari</option>
                         </select>
-                        <button type="submit" class="btn-sm btn-info">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                        <button type="submit" class="btn-sm btn-info whitespace-nowrap">
                             Perpanjang
                         </button>
                     </form>
                     <form action="{{ route('admin.pesanan.delete-preview', $pesanan) }}" method="POST" onsubmit="return confirm('Hapus preview?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn-sm btn-danger">
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                            </svg>
+                        <button type="submit" class="btn-sm btn-danger whitespace-nowrap">
                             Hapus
                         </button>
                     </form>
                 </div>
             </div>
             
-            <div class="bg-blue-50 border border-blue-200 p-4 rounded">
-                <p class="text-sm text-gray-700 mb-2">Link Preview:</p>
-                <a href="{{ $pesanan->preview_link }}" target="_blank" class="text-blue-600 hover:underline break-all">{{ $pesanan->preview_link }}</a>
+            <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <p class="text-sm text-gray-700 mb-2 font-medium">Link Preview:</p>
+                <a href="{{ $pesanan->preview_link }}" target="_blank" class="text-blue-600 hover:underline break-all text-sm">{{ $pesanan->preview_link }}</a>
                 @php
                     $previewExpiry = $pesanan->preview_expired_at ? \Carbon\Carbon::parse($pesanan->preview_expired_at) : null;
                     $previewStillActive = $previewExpiry && $previewExpiry->isFuture();
                 @endphp
-                <p class="text-xs text-gray-500 mt-2">
+                <p class="text-xs mt-2">
                     @if($previewStillActive)
-                    <span class="text-green-600">&#x2714; Aktif hingga {{ $previewExpiry->format('d M Y H:i') }}</span>
+                    <span class="text-green-600 font-medium">✓ Aktif hingga {{ $previewExpiry->format('d M Y H:i') }}</span>
                     @else
-                    <span class="text-red-600">&#x26A0; Link sudah kadaluarsa. Perpanjang untuk mengaktifkan kembali.</span>
+                    <span class="text-red-600 font-medium">⚠ Link sudah kadaluarsa. Perpanjang untuk mengaktifkan kembali.</span>
                     @endif
                 </p>
             </div>
@@ -257,8 +348,8 @@
 
         <!-- Upload File Final -->
         @if(in_array($pesanan->status, ['Menunggu Pelunasan', 'Pelunasan Dibayar - Menunggu Verifikasi', 'Selesai']))
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">
+        <div class="card animate-slide delay-400">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">
                 {{ $pesanan->file_final ? 'Perbarui File Final' : 'Upload File Final' }}
             </h2>
             
@@ -266,12 +357,12 @@
                 @csrf
                 <div>
                     <label for="file_final" class="block text-sm font-medium text-gray-700 mb-2">File Final (Bisa multiple)</label>
-                    <input type="file" name="file_final[]" id="file_final" class="input-field" multiple required>
+                    <input type="file" name="file_final[]" id="file_final" class="input-field w-full" multiple required>
                     <p class="text-xs text-gray-500 mt-1">
                         Max 100MB per file. Mengunggah ulang akan menggantikan file final yang ada.
                     </p>
                 </div>
-                <button type="submit" class="btn-primary mt-4">
+                <button type="submit" class="btn-primary mt-4 w-full sm:w-auto">
                     {{ $pesanan->file_final ? 'Perbarui File Final' : 'Upload File Final' }}
                 </button>
             </form>
@@ -289,22 +380,22 @@
                 $fileFinal = array_filter(is_array($fileFinal) ? $fileFinal : (array) $fileFinal);
             @endphp
             @if(count($fileFinal) > 0)
-            <div class="card">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">File Final</h2>
+            <div class="card animate-slide delay-400">
+                <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">File Final</h2>
                 
                 <div class="space-y-2">
                     @foreach($fileFinal as $file)
-                    <div class="flex items-center justify-between bg-green-50 p-3 rounded">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-green-50 p-3 rounded file-item gap-2">
                         <div class="flex items-center">
-                            <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-green-600 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
                             <div class="flex flex-col">
-                                <span class="text-sm text-gray-700">{{ basename($file) }}</span>
+                                <span class="text-sm text-gray-700 break-all">{{ basename($file) }}</span>
                                 <span class="text-xs text-gray-500 uppercase">{{ strtoupper(pathinfo($file, PATHINFO_EXTENSION)) }}</span>
                             </div>
                         </div>
-                        <a href="{{ asset('uploads/final/' . ltrim($file, '/')) }}" download class="text-blue-600 hover:text-blue-800 text-sm">Download</a>
+                        <a href="{{ asset('uploads/final/' . ltrim($file, '/')) }}" download class="text-blue-600 hover:text-blue-800 text-sm whitespace-nowrap">Download</a>
                     </div>
                     @endforeach
                 </div>
@@ -314,13 +405,13 @@
 
         <!-- Revisi -->
         @if($pesanan->revisi->count() > 0)
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Riwayat Revisi</h2>
+        <div class="card animate-slide delay-500">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Riwayat Revisi</h2>
             
             <div class="space-y-4">
                 @foreach($pesanan->revisi as $revisi)
-                <div class="bg-yellow-50 border border-yellow-200 p-4 rounded">
-                    <div class="flex items-center justify-between mb-2">
+                <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
                         <p class="font-semibold text-gray-800">Revisi ke-{{ $revisi->revisi_ke }}</p>
                         <span class="{{ $revisi->status_badge }} text-xs">{{ $revisi->status }}</span>
                     </div>
@@ -329,7 +420,7 @@
                     <div class="mt-2">
                         <p class="text-xs text-gray-500 mb-1">File Referensi ({{ $revisi->file_count }}):</p>
                         @foreach($revisi->file_referensi as $file)
-                        <a href="{{ asset('storage/' . $file) }}" target="_blank" class="text-xs text-blue-600 hover:underline block">{{ basename($file) }}</a>
+                        <a href="{{ asset('storage/' . $file) }}" target="_blank" class="text-xs text-blue-600 hover:underline block truncate">{{ basename($file) }}</a>
                         @endforeach
                     </div>
                     @endif
@@ -342,40 +433,40 @@
     </div>
 
     <!-- Sidebar -->
-    <div class="space-y-6">
+    <div class="space-y-4 lg:space-y-6">
         <!-- Info Client -->
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Informasi Client</h2>
+        <div class="card animate-slide delay-100">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Informasi Client</h2>
             
-            <div class="flex items-center mb-4">
-                <div class="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center mr-3">
-                    <span class="text-2xl font-bold text-white">{{ substr($pesanan->client->name, 0, 1) }}</span>
+            <div class="flex items-start mb-4">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center mr-3 flex-shrink-0">
+                    <span class="text-xl font-bold text-white">{{ substr($pesanan->client->name, 0, 1) }}</span>
                 </div>
-                <div>
-                    <p class="font-semibold text-gray-900">{{ $pesanan->client->name }}</p>
-                    <p class="text-sm text-gray-500">{{ $pesanan->client->email }}</p>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 truncate">{{ $pesanan->client->name }}</p>
+                    <p class="text-sm text-gray-500 truncate">{{ $pesanan->client->email }}</p>
                 </div>
             </div>
 
-            <div class="space-y-2 text-sm">
+            <div class="space-y-2 text-sm bg-gray-50 p-3 rounded-lg">
                 @if($pesanan->client->no_hp)
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
                     <span class="text-gray-500">Telepon:</span>
-                    <span class="text-gray-900">{{ $pesanan->client->no_hp }}</span>
+                    <span class="text-gray-900 font-medium">{{ $pesanan->client->no_hp }}</span>
                 </div>
                 @endif
-                <div class="flex justify-between">
+                <div class="flex justify-between items-center">
                     <span class="text-gray-500">Total Pesanan:</span>
-                    <span class="text-gray-900">{{ $pesanan->client->pesanan->count() }} pesanan</span>
+                    <span class="text-gray-900 font-medium">{{ $pesanan->client->pesanan->count() }} pesanan</span>
                 </div>
             </div>
 
-            <a href="{{ route('admin.client.show', $pesanan->client) }}" class="btn-secondary w-full mt-4">Lihat Profil Client</a>
+            <a href="{{ route('admin.client.show', $pesanan->client) }}" class="btn-secondary w-full mt-4 text-center block">Lihat Profil Client</a>
         </div>
 
         <!-- Invoice -->
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Invoice & Pembayaran</h2>
+        <div class="card animate-slide delay-200">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Invoice & Pembayaran</h2>
             
             @php
                 $invoiceDP = $pesanan->invoices->where('tipe', 'DP')->first();
@@ -386,9 +477,9 @@
             <div class="mb-4">
                 <p class="text-sm font-medium text-gray-700 mb-2">Invoice DP (50%)</p>
                 @if($invoiceDP)
-                <div class="bg-gray-50 p-3 rounded">
+                <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs text-gray-600">{{ $invoiceDP->nomor_invoice }}</span>
+                        <span class="text-xs text-gray-600 truncate">{{ $invoiceDP->nomor_invoice }}</span>
                         @if($invoiceDP->status == 'Lunas')
                         <span class="badge-success text-xs">Lunas</span>
                         @elseif($invoiceDP->status == 'Menunggu Verifikasi')
@@ -412,9 +503,9 @@
             <div>
                 <p class="text-sm font-medium text-gray-700 mb-2">Invoice Pelunasan (50%)</p>
                 @if($invoicePelunasan)
-                <div class="bg-gray-50 p-3 rounded">
+                <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs text-gray-600">{{ $invoicePelunasan->nomor_invoice }}</span>
+                        <span class="text-xs text-gray-600 truncate">{{ $invoicePelunasan->nomor_invoice }}</span>
                         @if($invoicePelunasan->status == 'Lunas')
                         <span class="badge-success text-xs">Lunas</span>
                         @elseif($invoicePelunasan->status == 'Menunggu Verifikasi')
@@ -432,38 +523,38 @@
                     <button type="submit" class="btn-primary w-full text-sm">Terbitkan Invoice Pelunasan</button>
                 </form>
                 @else
-                <p class="text-xs text-gray-500">DP harus lunas terlebih dahulu</p>
+                <p class="text-xs text-gray-500 text-center py-2 bg-gray-50 rounded-lg">DP harus lunas terlebih dahulu</p>
                 @endif
             </div>
         </div>
 
         <!-- Quick Stats -->
         @if($pesanan->paket)
-        <div class="card">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">Progress</h2>
+        <div class="card animate-slide delay-300">
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Progress</h2>
             
-            <div class="space-y-3">
-                <div>
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-3 rounded-lg">
                     <div class="flex justify-between text-sm mb-1">
                         <span class="text-gray-600">Durasi Pengerjaan</span>
-                        <span class="font-semibold">{{ $pesanan->paket->durasi_pengerjaan }} hari</span>
+                        <span class="font-semibold text-gray-900">{{ $pesanan->paket->durasi_pengerjaan }} hari</span>
                     </div>
                 </div>
                 @if(isset($pesanan->paket->jumlah_revisi))
-                <div>
-                    <div class="flex justify-between text-sm mb-1">
+                <div class="bg-gray-50 p-3 rounded-lg">
+                    <div class="flex justify-between text-sm mb-2">
                         <span class="text-gray-600">Jumlah Revisi</span>
-                        <span class="font-semibold">{{ $pesanan->paket->jumlah_revisi }}x</span>
+                        <span class="font-semibold text-gray-900">{{ $pesanan->paket->jumlah_revisi }}x</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                         @php
                             $revisiTerpakai = $pesanan->revisi->count();
                             $revisiMax = $pesanan->paket->jumlah_revisi;
                             $revisiProgress = $revisiMax > 0 ? (($revisiMax - $revisiTerpakai) / $revisiMax) * 100 : 0;
                         @endphp
-                        <div class="bg-blue-600 h-2 rounded-full" style="width: {{ number_format($revisiProgress, 0) }}%"></div>
+                        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full progress-bar" style="width: {{ number_format($revisiProgress, 0) }}%"></div>
                     </div>
-                    <p class="text-xs text-gray-500 mt-1">Tersisa: {{ max(0, $revisiMax - $revisiTerpakai) }}x</p>
+                    <p class="text-xs text-gray-500 mt-1">Tersisa: {{ max(0, $revisiMax - $revisiTerpakai) }}x revisi</p>
                 </div>
                 @endif
             </div>
@@ -471,8 +562,38 @@
         @endif
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isFirstLoad = !sessionStorage.getItem('pesanan_detail_loaded');
+        
+        if (isFirstLoad) {
+            document.body.classList.add('page-load');
+            sessionStorage.setItem('pesanan_detail_loaded', 'true');
+            
+            // Animate progress bar on first load
+            setTimeout(() => {
+                const progressBar = document.querySelector('.progress-bar');
+                if (progressBar) {
+                    const finalWidth = progressBar.style.width;
+                    progressBar.style.width = '0%';
+                    setTimeout(() => {
+                        progressBar.style.width = finalWidth;
+                    }, 100);
+                }
+            }, 500);
+            
+            setTimeout(() => {
+                document.body.classList.remove('page-load');
+            }, 1500);
+        }
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (e.target.activeElement.tagName === 'A' && 
+            e.target.activeElement.getAttribute('href') !== '#') {
+            sessionStorage.removeItem('pesanan_detail_loaded');
+        }
+    });
+</script>
 @endsection
-
-
-
-

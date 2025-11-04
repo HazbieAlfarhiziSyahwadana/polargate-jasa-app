@@ -5,16 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Auth\Passwords\CanResetPassword; // TAMBAHKAN INI
 use Carbon\Carbon;
 use App\Helpers\FileHelper;
+use App\Notifications\ResetPasswordNotification; // TAMBAHKAN INI
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword; // TAMBAHKAN CanResetPassword
 
     protected $fillable = [
         'name',
-        'foto', // TAMBAHKAN INI
+        'foto',
         'alamat',
         'jenis_kelamin',
         'tanggal_lahir',
@@ -38,13 +40,24 @@ class User extends Authenticatable
         'is_active' => 'boolean',
     ];
 
-    // TAMBAHKAN ACCESSOR UNTUK FOTO
+    // TAMBAHKAN METHOD INI UNTUK CUSTOM EMAIL RESET PASSWORD
+    /**
+     * Send the password reset notification.
+     *
+     * @param  string  $token
+     * @return void
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
+
+    // Accessor untuk foto
     public function getFotoUrlAttribute()
     {
         if ($this->foto) {
             return asset('uploads/users/' . $this->foto);
         }
-        // Default avatar jika tidak ada foto
         return asset('images/default-avatar.png');
     }
 
@@ -70,32 +83,31 @@ class User extends Authenticatable
         return $this->role === 'client';
     }
 
-    // Hitung usia otomatis
-    public static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($user) {
-            if ($user->tanggal_lahir) {
-                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
-            }
-        });
-
-        static::updating(function ($user) {
-            if ($user->tanggal_lahir) {
-                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
-            }
-
-            if ($user->isDirty('foto') && $user->getOriginal('foto')) {
-                FileHelper::deleteFile('users', $user->getOriginal('foto'));
-            }
-        });
-
-        static::deleting(function ($user) {
-            if ($user->foto) {
-                FileHelper::deleteFile('users', $user->foto);
-            }
-        });
-    }
+    // Boot method
+    public static function boot()
+    {
+        parent::boot();
 
+        static::creating(function ($user) {
+            if ($user->tanggal_lahir) {
+                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
+            }
+        });
+
+        static::updating(function ($user) {
+            if ($user->tanggal_lahir) {
+                $user->usia = Carbon::parse($user->tanggal_lahir)->age;
+            }
+
+            if ($user->isDirty('foto') && $user->getOriginal('foto')) {
+                FileHelper::deleteFile('users', $user->getOriginal('foto'));
+            }
+        });
+
+        static::deleting(function ($user) {
+            if ($user->foto) {
+                FileHelper::deleteFile('users', $user->foto);
+            }
+        });
+    }
 }

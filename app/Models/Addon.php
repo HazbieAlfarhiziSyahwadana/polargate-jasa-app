@@ -24,16 +24,21 @@ class Addon extends Model
         'is_active' => 'boolean',
     ];
 
-    // Relasi
+    // Relasi ke Layanan
     public function layanan()
     {
         return $this->belongsTo(Layanan::class);
     }
 
-    public function pesanan()
+    // Relasi ke PesananAddon (TAMBAHKAN INI)
+    public function pesananAddons()
     {
-        return $this->belongsToMany(Pesanan::class, 'pesanan_addons')
-            ->withPivot('harga')
-            ->withTimestamps();
+        return $this->hasMany(PesananAddon::class);
+    }
+
+    // Scope untuk addon aktif
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
     }
 }
