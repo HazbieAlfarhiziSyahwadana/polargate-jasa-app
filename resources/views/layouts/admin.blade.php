@@ -89,6 +89,58 @@
         .sidebar-link:hover {
             transform: translateX(4px);
         }
+
+        /* 🔔 Notifikasi Badge Style - WhatsApp Inspired */
+        .notification-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 7px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.5), 0 0 0 3px rgba(220, 38, 38, 0.1);
+            animation: pulseNotification 2s infinite;
+            min-width: 20px;
+            text-align: center;
+            z-index: 10;
+            line-height: 1;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes pulseNotification {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.9;
+                transform: scale(1.08);
+            }
+        }
+
+        /* Ring Animation untuk Icon */
+        .notification-ring {
+            animation: ringBell 3s ease-in-out infinite;
+        }
+
+        @keyframes ringBell {
+            0%, 100% { transform: rotate(0deg); }
+            5%, 15%, 25% { transform: rotate(-15deg); }
+            10%, 20%, 30% { transform: rotate(15deg); }
+        }
+
+        /* Highlight untuk link dengan notifikasi */
+        .has-notification {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0) 100%) !important;
+            border-left: 3px solid #ef4444 !important;
+        }
+
+        .has-notification:hover {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.18) 0%, rgba(239, 68, 68, 0.05) 100%) !important;
+        }
         
         /* Header Animation */
         @keyframes slideDown {
@@ -121,6 +173,30 @@
         .flash-message {
             animation: slideInRight 0.5s ease-out;
         }
+
+        /* 🎨 WhatsApp-Style Toast Notification */
+        .toast-notification {
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .toast-notification.show {
+            transform: translateX(0) !important;
+            opacity: 1 !important;
+        }
+
+        .toast-notification.hide {
+            transform: translateX(400px) !important;
+            opacity: 0 !important;
+        }
+
+        @keyframes toastBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .toast-icon-bounce {
+            animation: toastBounce 0.6s ease-in-out;
+        }
     </style>
     
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -152,49 +228,102 @@
                 
                 <!-- Navigation -->
                 <nav class="flex-1 overflow-y-auto py-6 px-3">
-                    <a href="{{ route('admin.dashboard') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.dashboard') ? 'active bg-white bg-opacity-20' : '' }}">
+                    <!-- Dashboard -->
+                    <a href="{{ route('admin.dashboard') }}" 
+                       class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.dashboard') ? 'active bg-white bg-opacity-20' : '' }}">
                         <i class="fas fa-home w-5 text-center mr-3"></i>
                         <span class="font-medium">Dashboard</span>
                     </a>
                     
-                    <a href="{{ route('admin.layanan.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.layanan.*') ? 'active bg-white bg-opacity-20' : '' }}">
+                    <!-- Layanan -->
+                    <a href="{{ route('admin.layanan.index') }}" 
+                       class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.layanan.*') ? 'active bg-white bg-opacity-20' : '' }}">
                         <i class="fas fa-th-large w-5 text-center mr-3"></i>
                         <span class="font-medium">Layanan</span>
                     </a>
                     
-                    <a href="{{ route('admin.paket.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.paket.*') ? 'active bg-white bg-opacity-20' : '' }}">
+                    <!-- Paket -->
+                    <a href="{{ route('admin.paket.index') }}" 
+                       class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.paket.*') ? 'active bg-white bg-opacity-20' : '' }}">
                         <i class="fas fa-box w-5 text-center mr-3"></i>
                         <span class="font-medium">Paket</span>
                     </a>
                     
-                    <a href="{{ route('admin.addon.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.addon.*') ? 'active bg-white bg-opacity-20' : '' }}">
+                    <!-- Add-on -->
+                    <a href="{{ route('admin.addon.index') }}" 
+                       class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.addon.*') ? 'active bg-white bg-opacity-20' : '' }}">
                         <i class="fas fa-plus-circle w-5 text-center mr-3"></i>
                         <span class="font-medium">Add-on</span>
                     </a>
                     
-                    <a href="{{ route('admin.pesanan.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.pesanan.*') ? 'active bg-white bg-opacity-20' : '' }}">
-                        <i class="fas fa-clipboard-list w-5 text-center mr-3"></i>
-                        <span class="font-medium">Pesanan</span>
+                    <!-- Pesanan dengan Notifikasi Badge -->
+                    @php
+                        $pesananBaru = \App\Models\Pesanan::where('created_at', '>=', now()->subHours(24))
+                            ->whereNotIn('status', ['Selesai', 'Dibatalkan'])
+                            ->count();
+                    @endphp
+                    
+                    <a href="{{ route('admin.pesanan.index') }}" 
+                       class="sidebar-link flex items-center justify-between px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 relative {{ request()->routeIs('admin.pesanan.*') ? 'active bg-white bg-opacity-20' : '' }} {{ $pesananBaru > 0 ? 'has-notification' : '' }}">
+                        <div class="flex items-center">
+                            <i class="fas fa-clipboard-list w-5 text-center mr-3 {{ $pesananBaru > 0 ? 'notification-ring' : '' }}"></i>
+                            <span class="font-medium">Pesanan</span>
+                        </div>
+                        @if($pesananBaru > 0)
+                        <span class="notification-badge" id="pesananBadge">{{ $pesananBaru > 99 ? '99+' : $pesananBaru }}</span>
+                        @endif
                     </a>
                     
-                    <a href="{{ route('admin.client.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.client.*') ? 'active bg-white bg-opacity-20' : '' }}">
-                        <i class="fas fa-users w-5 text-center mr-3"></i>
-                        <span class="font-medium">Client</span>
+                    <!-- Revisi dengan Notifikasi -->
+                    @php
+                        $revisiMenunggu = \App\Models\Pesanan::where('status', 'Revisi Diminta')->count();
+                    @endphp
+                    
+                    <a href="{{ route('admin.revisi.index') }}" 
+                       class="sidebar-link flex items-center justify-between px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 relative {{ request()->routeIs('admin.revisi.*') ? 'active bg-white bg-opacity-20' : '' }} {{ $revisiMenunggu > 0 ? 'has-notification' : '' }}">
+                        <div class="flex items-center">
+                            <i class="fas fa-pen w-5 text-center mr-3 {{ $revisiMenunggu > 0 ? 'notification-ring' : '' }}"></i>
+                            <span class="font-medium">Revisi</span>
+                        </div>
+                        @if($revisiMenunggu > 0)
+                        <span class="notification-badge" id="revisiBadge">{{ $revisiMenunggu > 99 ? '99+' : $revisiMenunggu }}</span>
+                        @endif
                     </a>
                     
-                    <a href="{{ route('admin.invoice.index') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.invoice.*') ? 'active bg-white bg-opacity-20' : '' }}">
+                    <!-- Invoice -->
+                    <a href="{{ route('admin.invoice.index') }}" 
+                       class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.invoice.*') ? 'active bg-white bg-opacity-20' : '' }}">
                         <i class="fas fa-file-invoice w-5 text-center mr-3"></i>
                         <span class="font-medium">Invoice</span>
                     </a>
                     
-                    <a href="{{ route('admin.pembayaran.pending') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.pembayaran.*') ? 'active bg-white bg-opacity-20' : '' }}">
-                        <i class="fas fa-credit-card w-5 text-center mr-3"></i>
-                        <span class="font-medium">Verifikasi Pembayaran</span>
+                    <!-- Verifikasi Pembayaran dengan Notifikasi -->
+                    @php
+                        $pembayaranPending = \App\Models\Pembayaran::whereIn('status', ['Pending', 'Menunggu Verifikasi'])->count();
+                    @endphp
+                    
+                    <a href="{{ route('admin.pembayaran.pending') }}" 
+                       class="sidebar-link flex items-center justify-between px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 relative {{ request()->routeIs('admin.pembayaran.*') ? 'active bg-white bg-opacity-20' : '' }} {{ $pembayaranPending > 0 ? 'has-notification' : '' }}">
+                        <div class="flex items-center">
+                            <i class="fas fa-credit-card w-5 text-center mr-3 {{ $pembayaranPending > 0 ? 'notification-ring' : '' }}"></i>
+                            <span class="font-medium">Verifikasi Pembayaran</span>
+                        </div>
+                        @if($pembayaranPending > 0)
+                        <span class="notification-badge" id="pembayaranBadge">{{ $pembayaranPending > 99 ? '99+' : $pembayaranPending }}</span>
+                        @endif
+                    </a>
+
+                    <!-- Client -->
+                    <a href="{{ route('admin.client.index') }}" 
+                       class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg mb-1 {{ request()->routeIs('admin.client.*') ? 'active bg-white bg-opacity-20' : '' }}">
+                        <i class="fas fa-users w-5 text-center mr-3"></i>
+                        <span class="font-medium">Client</span>
                     </a>
                     
                     <!-- Dropdown Laporan -->
                     <div x-data="{ open: {{ request()->routeIs('admin.laporan.*') ? 'true' : 'false' }} }" class="mb-1">
-                        <button @click="open = !open" class="sidebar-link flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg">
+                        <button @click="open = !open" 
+                                class="sidebar-link flex items-center justify-between w-full px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg">
                             <div class="flex items-center">
                                 <i class="fas fa-chart-bar w-5 text-center mr-3"></i>
                                 <span class="font-medium">Laporan</span>
@@ -206,16 +335,26 @@
                              x-transition:enter-start="opacity-0 transform -translate-y-2"
                              x-transition:enter-end="opacity-100 transform translate-y-0"
                              class="ml-4 mt-1 space-y-1">
-                            <a href="{{ route('admin.laporan.keuangan') }}" class="block px-4 py-2 text-sm text-blue-100 hover:text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-all duration-300 hover:translate-x-2">Keuangan</a>
-                            <a href="{{ route('admin.laporan.pemesanan') }}" class="block px-4 py-2 text-sm text-blue-100 hover:text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-all duration-300 hover:translate-x-2">Pemesanan</a>
-                            <a href="{{ route('admin.laporan.client') }}" class="block px-4 py-2 text-sm text-blue-100 hover:text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-all duration-300 hover:translate-x-2">Client</a>
+                            <a href="{{ route('admin.laporan.keuangan') }}" 
+                               class="block px-4 py-2 text-sm text-blue-100 hover:text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-all duration-300 hover:translate-x-2">
+                               Keuangan
+                            </a>
+                            <a href="{{ route('admin.laporan.pemesanan') }}" 
+                               class="block px-4 py-2 text-sm text-blue-100 hover:text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-all duration-300 hover:translate-x-2">
+                               Pemesanan
+                            </a>
+                            <a href="{{ route('admin.laporan.client') }}" 
+                               class="block px-4 py-2 text-sm text-blue-100 hover:text-white hover:bg-white hover:bg-opacity-10 rounded-lg transition-all duration-300 hover:translate-x-2">
+                               Client
+                            </a>
                         </div>
                     </div>
                 </nav>
                 
                 <!-- Settings -->
                 <div class="p-4 border-t border-white border-opacity-10">
-                    <a href="{{ route('admin.profil') }}" class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg">
+                    <a href="{{ route('admin.profil') }}" 
+                       class="sidebar-link flex items-center px-4 py-3 text-white hover:bg-white hover:bg-opacity-10 rounded-lg">
                         <i class="fas fa-cog w-5 text-center mr-3"></i>
                         <span class="font-medium">Pengaturan</span>
                     </a>
@@ -228,7 +367,8 @@
             <!-- Header -->
             <header class="bg-white shadow-md border-b border-gray-200 header-animate">
                 <div class="flex items-center justify-between px-6 py-4">
-                    <button @click="sidebarOpen = !sidebarOpen" class="text-gray-600 hover:text-primary-600 lg:hidden transition-colors duration-300 hover:scale-110 transform">
+                    <button @click="sidebarOpen = !sidebarOpen" 
+                            class="text-gray-600 hover:text-primary-600 lg:hidden transition-colors duration-300 hover:scale-110 transform">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                     
@@ -236,13 +376,17 @@
                     
                     <!-- User Menu -->
                     <div x-data="{ open: false }" class="relative">
-                        <button @click="open = !open" class="flex items-center space-x-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-all duration-300 hover:shadow-md">
-                            <img src="{{ Auth::user()->foto_url }}" alt="Avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary-500 hover:border-primary-600 transition-colors duration-300">
+                        <button @click="open = !open" 
+                                class="flex items-center space-x-3 hover:bg-gray-50 rounded-lg px-3 py-2 transition-all duration-300 hover:shadow-md">
+                            <img src="{{ Auth::user()->foto_url }}" 
+                                 alt="Avatar" 
+                                 class="w-10 h-10 rounded-full object-cover border-2 border-primary-500 hover:border-primary-600 transition-colors duration-300">
                             <div class="text-left hidden md:block">
                                 <p class="text-sm font-semibold text-gray-800">{{ Auth::user()->name }}</p>
                                 <p class="text-xs text-gray-500">Super Admin</p>
                             </div>
-                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-300" :class="open ? 'rotate-180' : ''"></i>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs transition-transform duration-300" 
+                               :class="open ? 'rotate-180' : ''"></i>
                         </button>
                         
                         <div x-show="open" 
@@ -254,14 +398,16 @@
                              x-transition:leave-start="opacity-100 transform scale-100"
                              x-transition:leave-end="opacity-0 transform scale-95"
                              class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-2xl py-2 z-50 border border-gray-100">
-                            <a href="{{ route('admin.profil') }}" class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-300 hover:translate-x-2">
+                            <a href="{{ route('admin.profil') }}" 
+                               class="flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-all duration-300 hover:translate-x-2">
                                 <i class="fas fa-user-circle w-5 mr-3 text-primary-600"></i>
                                 <span>Profil Saya</span>
                             </a>
                             <hr class="my-2">
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-all duration-300 hover:translate-x-2">
+                                <button type="submit" 
+                                        class="flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-all duration-300 hover:translate-x-2">
                                     <i class="fas fa-sign-out-alt w-5 mr-3"></i>
                                     <span>Logout</span>
                                 </button>
@@ -275,11 +421,15 @@
             <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
                 <!-- Flash Messages -->
                 @if(session('success'))
-                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 px-6 py-4 rounded-r-lg shadow-lg flash-message">
+                <div x-data="{ show: true }" 
+                     x-show="show" 
+                     x-init="setTimeout(() => show = false, 5000)" 
+                     class="mb-6 bg-green-50 border-l-4 border-green-500 text-green-700 px-6 py-4 rounded-r-lg shadow-lg flash-message">
                     <div class="flex items-center">
                         <i class="fas fa-check-circle text-2xl mr-3 animate-bounce"></i>
                         <span class="font-medium">{{ session('success') }}</span>
-                        <button @click="show = false" class="ml-auto hover:scale-110 transition-transform duration-300">
+                        <button @click="show = false" 
+                                class="ml-auto hover:scale-110 transition-transform duration-300">
                             <i class="fas fa-times text-green-500 hover:text-green-700"></i>
                         </button>
                     </div>
@@ -287,11 +437,15 @@
                 @endif
                 
                 @if(session('error'))
-                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)" class="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-r-lg shadow-lg flash-message">
+                <div x-data="{ show: true }" 
+                     x-show="show" 
+                     x-init="setTimeout(() => show = false, 5000)" 
+                     class="mb-6 bg-red-50 border-l-4 border-red-500 text-red-700 px-6 py-4 rounded-r-lg shadow-lg flash-message">
                     <div class="flex items-center">
                         <i class="fas fa-exclamation-circle text-2xl mr-3 animate-bounce"></i>
                         <span class="font-medium">{{ session('error') }}</span>
-                        <button @click="show = false" class="ml-auto hover:scale-110 transition-transform duration-300">
+                        <button @click="show = false" 
+                                class="ml-auto hover:scale-110 transition-transform duration-300">
                             <i class="fas fa-times text-red-500 hover:text-red-700"></i>
                         </button>
                     </div>
@@ -316,6 +470,222 @@
         class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
     ></div>
     
-    @stack('scripts')
-</body>
-</html>
+    <!-- 🎉 Container untuk Toast Notifications (WhatsApp Style) -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[60] space-y-3 max-w-sm pointer-events-none">
+        <!-- Toast notifications akan muncul di sini -->
+    </div>
+    
+    <!-- 🔊 Audio untuk Notification Sound (Hidden) -->
+    <audio id="notificationSound" preload="auto">
+        <source src="data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA//tQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAADhAC7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7v////////////////////////////////////////////////////////////////AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAUAAAAAAAADhPqVGPUAAAAAAAAAAAAAAAAA//tQZAAP8AAAaQAAAAgAAA0gAAABAAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==" type="audio/mpeg">
+    </audio>
+    
+    <!-- 🎯 Script Auto-refresh Badge + WhatsApp Style Notifications -->
+    <script>
+        let previousCounts = {
+            pesananBaru: {{ $pesananBaru ?? 0 }},
+            pembayaranPending: {{ $pembayaranPending ?? 0 }},
+            revisiMenunggu: {{ $revisiMenunggu ?? 0 }}
+        };
+        
+        // Request permission untuk desktop notifications
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        
+        // Auto-refresh notifikasi setiap 30 detik
+        function updateBadges() {
+            fetch('{{ route("admin.pesanan.badge-count") }}')
+                .then(response => response.json())
+                .then(data => {
+                    // Deteksi pembayaran baru
+                    if (data.pembayaranPending > previousCounts.pembayaranPending) {
+                        const newCount = data.pembayaranPending - previousCounts.pembayaranPending;
+                        showToastNotification(
+                            '💰 Pembayaran Baru Masuk!', 
+                            `${newCount} pembayaran baru menunggu verifikasi`, 
+                            'payment',
+                            '{{ route("admin.pembayaran.pending") }}'
+                        );
+                        playNotificationSound();
+                        showDesktopNotification('💰 Pembayaran Baru!', `${newCount} pembayaran menunggu verifikasi`);
+                    }
+                    
+                    // Deteksi pesanan baru
+                    if (data.pesananBaru > previousCounts.pesananBaru) {
+                        const newCount = data.pesananBaru - previousCounts.pesananBaru;
+                        showToastNotification(
+                            '📦 Pesanan Baru!', 
+                            `${newCount} pesanan baru masuk dalam 24 jam terakhir`, 
+                            'order',
+                            '{{ route("admin.pesanan.index") }}'
+                        );
+                        playNotificationSound();
+                        showDesktopNotification('📦 Pesanan Baru!', `${newCount} pesanan baru masuk`);
+                    }
+                    
+                    // Deteksi revisi baru
+                    if (data.revisiMenunggu > previousCounts.revisiMenunggu) {
+                        const newCount = data.revisiMenunggu - previousCounts.revisiMenunggu;
+                        showToastNotification(
+                            '✏️ Permintaan Revisi Baru!', 
+                            `${newCount} permintaan revisi dari client`, 
+                            'revision',
+                            '{{ route("admin.revisi.index") }}'
+                        );
+                        playNotificationSound();
+                        showDesktopNotification('✏️ Revisi Baru!', `${newCount} permintaan revisi`);
+                    }
+                    
+                    // Update badges
+                    updateBadge('pesananBadge', data.pesananBaru, '{{ route("admin.pesanan.index") }}');
+                    updateBadge('pembayaranBadge', data.pembayaranPending, '{{ route("admin.pembayaran.pending") }}');
+                    updateBadge('revisiBadge', data.revisiMenunggu, '{{ route("admin.revisi.index") }}');
+                    
+                    // Update previous counts
+                    previousCounts = {
+                        pesananBaru: data.pesananBaru,
+                        pembayaranPending: data.pembayaranPending,
+                        revisiMenunggu: data.revisiMenunggu
+                    };
+                    
+                    console.log('📊 Notifikasi updated:', data);
+                })
+                .catch(error => console.error('❌ Error fetching badge count:', error));
+        }
+
+        function updateBadge(badgeId, count, linkUrl) {
+            const badge = document.getElementById(badgeId);
+            const link = document.querySelector(`a[href="${linkUrl}"]`);
+            
+            if (count > 0) {
+                const displayCount = count > 99 ? '99+' : count;
+                
+                if (badge) {
+                    badge.textContent = displayCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    const newBadge = document.createElement('span');
+                    newBadge.id = badgeId;
+                    newBadge.className = 'notification-badge';
+                    newBadge.textContent = displayCount;
+                    link.appendChild(newBadge);
+                }
+                
+                if (link && !link.classList.contains('has-notification')) {
+                    link.classList.add('has-notification');
+                    const icon = link.querySelector('i.fa-clipboard-list, i.fa-credit-card, i.fa-pen');
+                    if (icon) icon.classList.add('notification-ring');
+                }
+            } else {
+                if (badge) badge.remove();
+                
+                if (link) {
+                    link.classList.remove('has-notification');
+                    const icon = link.querySelector('i.fa-clipboard-list, i.fa-credit-card, i.fa-pen');
+                    if (icon) icon.classList.remove('notification-ring');
+                }
+            }
+        }
+        
+        // 🎨 WhatsApp-style Toast Notification
+        function showToastNotification(title, message, type, link) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification transform translate-x-[400px] opacity-0 pointer-events-auto';
+            
+            const colors = {
+                payment: 'from-green-500 to-green-600',
+                order: 'from-blue-500 to-blue-600',
+                revision: 'from-orange-500 to-orange-600'
+            };
+            
+            const icons = {
+                payment: '💰',
+                order: '📦',
+                revision: '✏️'
+            };
+            
+            toast.innerHTML = `
+                <a href="${link}" class="block">
+                    <div class="bg-gradient-to-r ${colors[type]} text-white rounded-xl shadow-2xl p-4 cursor-pointer hover:shadow-3xl transition-all duration-300 border-2 border-white/20 backdrop-blur-sm min-w-[320px] hover:scale-105">
+                        <div class="flex items-start gap-3">
+                            <div class="text-3xl flex-shrink-0 toast-icon-bounce">${icons[type]}</div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-bold text-base mb-1 flex items-center gap-2">
+                                    ${title}
+                                    <span class="text-xs bg-white/30 px-2 py-0.5 rounded-full animate-pulse">BARU</span>
+                                </h4>
+                                <p class="text-sm text-white/95 mb-2">${message}</p>
+                                <div class="flex items-center gap-2 text-xs text-white/80">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Baru saja</span>
+                                </div>
+                            </div>
+                            <button onclick="event.preventDefault(); this.closest('.toast-notification').classList.add('hide'); setTimeout(() => this.closest('.toast-notification').remove(), 400);" class="text-white/80 hover:text-white hover:bg-white/20 rounded-full p-1.5 transition-all">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </a>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => {
+                toast.classList.remove('translate-x-[400px]', 'opacity-0');
+                toast.classList.add('show');
+            }, 100);
+            
+            // Auto remove after 7 seconds
+            setTimeout(() => {
+                toast.classList.add('hide');
+                setTimeout(() => toast.remove(), 400);
+            }, 7000);
+        }
+        
+        // 🔊 Play notification sound
+        function playNotificationSound() {
+            const audio = document.getElementById('notificationSound');
+            if (audio) {
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log('Sound play prevented:', e));
+            }
+        }
+        
+        // 🖥️ Desktop notification
+        function showDesktopNotification(title, body) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: body,
+                    icon: '{{ asset("logo/polargate_logo_white-01.png") }}',
+                    badge: '{{ asset("logo/polargate_logo_white-01.png") }}',
+                    tag: 'polargate-notification',
+                    requireInteraction: false
+                });
+            }
+        }
+
+        // Initial update
+        document.addEventListener('DOMContentLoaded', function() {
+            updateBadges();
+            
+            // Auto-refresh setiap 30 detik
+            setInterval(updateBadges, 30000);
+            
+            console.log('🚀 Notification system initialized');
+        });
+
+        // Update ketika tab menjadi active
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                updateBadges();
+                console.log('👁️ Tab active - refreshing notifications');
+            }
+        });
+    </script>

@@ -20,6 +20,25 @@
         }
     }
 
+    /* 🔔 Animasi Notifikasi Pulse */
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+    }
+
+    /* 🔔 Animasi Bell Ring */
+    @keyframes ringBell {
+        0%, 100% { transform: rotate(0deg); }
+        10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+        20%, 40%, 60%, 80% { transform: rotate(10deg); }
+    }
+
     .page-load .animate-fade {
         animation: fadeIn 0.4s ease-out;
     }
@@ -50,6 +69,49 @@
     .stats-card:hover {
         transform: scale(1.03);
         box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    /* 🔔 Badge Notifikasi */
+    .notification-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+        animation: pulse 2s infinite;
+        min-width: 24px;
+        text-align: center;
+        z-index: 10;
+    }
+
+    .notification-icon {
+        animation: ringBell 3s ease-in-out infinite;
+    }
+
+    /* 🆕 Badge NEW untuk pesanan baru */
+    .new-order-badge {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+        animation: pulse 2s infinite;
+        margin-left: 8px;
+    }
+
+    /* ✨ Highlight untuk pesanan baru */
+    .new-order-row {
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0) 100%);
+        border-left: 3px solid #10b981;
     }
 
     .input-field, select {
@@ -123,25 +185,47 @@
             </div>
         </div>
         
-        <div class="card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white stats-card cursor-pointer animate-slide delay-100">
+        <div class="card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white stats-card cursor-pointer animate-slide delay-100 relative">
+            @php
+                $menungguProses = $pesanan->whereIn('status', ['Menunggu Konfirmasi', 'Menunggu Pembayaran DP', 'DP Dibayar - Menunggu Verifikasi'])->count();
+            @endphp
+            
+            {{-- 🔔 Badge Notifikasi --}}
+            @if($menungguProses > 0)
+            <div class="notification-badge">
+                {{ $menungguProses }}
+            </div>
+            @endif
+            
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-yellow-100 text-sm font-medium mb-1">Menunggu Proses</p>
-                    <p class="text-3xl font-bold">{{ $pesanan->whereIn('status', ['Menunggu Konfirmasi', 'Menunggu Pembayaran DP', 'DP Dibayar - Menunggu Verifikasi'])->count() }}</p>
+                    <p class="text-3xl font-bold">{{ $menungguProses }}</p>
                 </div>
                 <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <svg class="w-8 h-8 {{ $menungguProses > 0 ? 'notification-icon' : '' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
                 </div>
             </div>
         </div>
         
-        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white stats-card cursor-pointer animate-slide delay-200">
+        <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white stats-card cursor-pointer animate-slide delay-200 relative">
+            @php
+                $sedangDikerjakan = $pesanan->whereIn('status', ['Sedang Diproses', 'Preview Siap', 'Revisi Diminta'])->count();
+            @endphp
+            
+            {{-- 🔔 Badge Notifikasi --}}
+            @if($sedangDikerjakan > 0)
+            <div class="notification-badge">
+                {{ $sedangDikerjakan }}
+            </div>
+            @endif
+            
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-purple-100 text-sm font-medium mb-1">Sedang Dikerjakan</p>
-                    <p class="text-3xl font-bold">{{ $pesanan->whereIn('status', ['Sedang Diproses', 'Preview Siap', 'Revisi Diminta'])->count() }}</p>
+                    <p class="text-3xl font-bold">{{ $sedangDikerjakan }}</p>
                 </div>
                 <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,7 +450,12 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200" id="pesananTableBody">
                     @forelse($pesanan as $item)
-                    <tr class="pesanan-row"
+                    @php
+                        // Cek apakah pesanan baru (dibuat dalam 24 jam terakhir)
+                        $isNewOrder = $item->created_at->diffInHours(now()) <= 24;
+                    @endphp
+                    
+                    <tr class="pesanan-row {{ $isNewOrder ? 'new-order-row' : '' }}"
                         data-kode="{{ strtolower($item->kode_pesanan) }}"
                         data-client="{{ strtolower($item->client->name) }}"
                         data-email="{{ strtolower($item->client->email) }}"
@@ -381,7 +470,12 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <div class="font-medium text-gray-900 text-sm">{{ $item->kode_pesanan }}</div>
+                                    <div class="flex items-center">
+                                        <span class="font-medium text-gray-900 text-sm">{{ $item->kode_pesanan }}</span>
+                                        @if($isNewOrder)
+                                        <span class="new-order-badge">NEW</span>
+                                        @endif
+                                    </div>
                                     <div class="text-xs text-gray-500 lg:hidden">{{ $item->created_at->format('d/m/Y') }}</div>
                                 </div>
                             </div>

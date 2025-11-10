@@ -57,7 +57,7 @@ class PesananController extends Controller
         'paket_id' => 'required|exists:paket,id',
         'addons' => 'nullable|array',
         'addons.*' => 'exists:addons,id',
-        'detail_pesanan' => 'required|string',
+        'detail_pesanan' => 'required|string', // Form menggunakan detail_pesanan
         'file_pendukung.*' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png,zip,rar|max:5120',
     ]);
 
@@ -71,13 +71,13 @@ class PesananController extends Controller
         // Hitung total harga
         $totalHarga = $paket->harga;
 
-        // Buat pesanan
+        // ✅ PERBAIKAN: Simpan ke kolom detail_pesanan (bukan brief)
         $pesanan = Pesanan::create([
             'client_id' => Auth::id(),
             'layanan_id' => $validated['layanan_id'],
             'paket_id' => $validated['paket_id'],
             'kode_pesanan' => $this->generateKodePesanan(),
-            'brief' => $validated['detail_pesanan'], // ← INI YANG DITAMBAHKAN
+            'detail_pesanan' => $validated['detail_pesanan'], // ✅ Ubah dari 'brief' ke 'detail_pesanan'
             'harga_paket' => $paket->harga,
             'total_harga' => $totalHarga,
             'status' => 'Menunggu Pembayaran DP',
@@ -140,7 +140,8 @@ class PesananController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $pesanan->load(['layanan', 'paket', 'addons', 'invoices.pembayaran']);
+        // Load relasi yang diperlukan
+        $pesanan->load(['layanan', 'paket', 'addons', 'invoices.pembayaran', 'revisi']);
 
         return view('client.pesanan.show', compact('pesanan'));
     }
@@ -256,6 +257,26 @@ class PesananController extends Controller
 
         return response()->download($zipPath, $zipName)->deleteFileAfterSend(true);
     }
+
+   public function cancel(Request $request, Pesanan $pesanan)
+{
+    // Validasi: hanya bisa membatalkan jika status Menunggu Pembayaran DP dan belum bayar
+    if ($pesanan->status !== 'Menunggu Pembayaran DP') {
+        return redirect()->back()->with('error', 'Pesanan tidak dapat dibatalkan.');
+    }
+
+    // Cek apakah sudah ada pembayaran DP
+    $invoiceDP = $pesanan->invoices()->where('tipe', 'DP')->first();
+    if ($invoiceDP && $invoiceDP->status === 'Lunas') {
+        return redirect()->back()->with('error', 'Pesanan tidak dapat dibatalkan karena DP sudah dibayar.');
+    }
+
+    $pesanan->update([
+        'status' => 'Dibatalkan'
+    ]);
+
+    return redirect()->route('client.pesanan.index')->with('success', 'Pesanan berhasil dibatalkan.');
+}
 
     // Helper functions
     private function generateKodePesanan()

@@ -227,15 +227,16 @@
             </div>
         </div>
 
-        <!-- Brief & Referensi -->
+         <!-- Brief & Referensi -->
         <div class="card animate-slide delay-200">
-            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Brief & Referensi</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Detail Pesanan & Referensi</h2>
             
             <div class="space-y-4">
                 <div>
-                    <p class="text-sm text-gray-500 mb-2">Brief dari Client</p>
+                    <p class="text-sm text-gray-500 mb-2">Detail Pesanan dari Client</p>
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <p class="text-gray-700 whitespace-pre-line text-sm">{{ $pesanan->brief }}</p>
+                        {{-- FIX: Gunakan detail_pesanan bukan brief --}}
+                        <p class="text-gray-700 whitespace-pre-line text-sm">{{ $pesanan->detail_pesanan ?? 'Tidak ada brief' }}</p>
                     </div>
                 </div>
 
@@ -270,18 +271,20 @@
         <!-- Upload Preview -->
         @if(in_array($pesanan->status, ['Sedang Diproses', 'Revisi Diminta', 'Preview Siap', 'Menunggu Pelunasan']))
         <div class="card animate-slide delay-300">
-            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Upload Preview</h2>
+            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">
+                {{ $pesanan->preview_link ? 'Update Link Preview' : 'Upload Link Preview' }}
+            </h2>
             
             <form action="{{ route('admin.pesanan.upload-preview', $pesanan) }}" method="POST">
                 @csrf
                 <div class="space-y-4">
                     <div>
                         <label for="preview_link" class="block text-sm font-medium text-gray-700 mb-2">Link Preview</label>
-                        <input type="url" name="preview_link" id="preview_link" class="input-field w-full" placeholder="https://drive.google.com/..." value="{{ old('preview_link', $pesanan->preview_link) }}" required>
-                        <p class="text-xs text-gray-500 mt-1">Upload file preview ke Google Drive/Dropbox dan masukkan link sharingnya.</p>
+                        <input type="url" name="preview_link" id="preview_link" class="input-field w-full" placeholder="https://drive.google.com/file/d/..." value="{{ old('preview_link', $pesanan->preview_link) }}" required>
+                        <p class="text-xs text-gray-500 mt-1">Upload file preview ke Google Drive/Dropbox dan masukkan link sharing-nya (pastikan akses diset ke "Anyone with the link").</p>
                     </div>
                     <div>
-                        <label for="duration_hours" class="block text-sm font-medium text-gray-700 mb-2">Masa aktif link</label>
+                        <label for="duration_hours" class="block text-sm font-medium text-gray-700 mb-2">Masa Aktif Link</label>
                         <select name="duration_hours" id="duration_hours" class="input-field w-full">
                             <option value="6">6 jam</option>
                             <option value="12">12 jam</option>
@@ -290,8 +293,11 @@
                             <option value="72">72 jam</option>
                             <option value="168">7 hari</option>
                         </select>
+                        <p class="text-xs text-gray-500 mt-1">Client hanya bisa mengakses preview dalam durasi yang dipilih.</p>
                     </div>
-                    <button type="submit" class="btn-primary w-full sm:w-auto">Upload Preview</button>
+                    <button type="submit" class="btn-primary w-full sm:w-auto">
+                        {{ $pesanan->preview_link ? '🔄 Update Link Preview' : '📤 Upload Link Preview' }}
+                    </button>
                 </div>
             </form>
         </div>

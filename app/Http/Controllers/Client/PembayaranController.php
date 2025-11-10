@@ -8,6 +8,7 @@ use App\Models\Pembayaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
 {
@@ -82,39 +83,73 @@ class PembayaranController extends Controller
      * Route: POST /client/pembayaran/store
      * Route: POST /client/pembayaran/{invoice_id}/store
      */
-    public function store(Request $request, $invoice_id = null)
-    {
-        $request->validate([
-            'invoice_id' => 'required|exists:invoices,id',
-            'metode_pembayaran' => 'required|string',
-            'bukti_pembayaran' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+   public function store(Request $request, $invoice_id = null)
+{
+    // Validasi
+    $request->validate([
+        'invoice_id' => 'required|exists:invoices,id',
+        'metode_pembayaran' => 'required|string',
+        'bukti_pembayaran' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+    ]);
 
-        // Cek invoice
-        $invoice = Invoice::with('pesanan')->whereHas('pesanan', function($q) {
-            $q->where('client_id', Auth::id());
-        })->findOrFail($request->invoice_id);
+    // Cek invoice
+    $invoice = Invoice::with('pesanan')->whereHas('pesanan', function($q) {
+        $q->where('client_id', Auth::id());
+    })->findOrFail($request->invoice_id);
 
-        // Validasi jumlah invoice
-        if (!$invoice->jumlah || $invoice->jumlah <= 0) {
+    // Validasi jumlah invoice
+    if (!$invoice->jumlah || $invoice->jumlah <= 0) {
+        return redirect()->back()
+            ->with('error', 'Total invoice tidak valid. Silakan hubungi admin.');
+    }
+
+    // Cek apakah sudah ada pembayaran pending
+    $existingPembayaran = Pembayaran::where('invoice_id', $invoice->id)
+        ->where('status', 'Menunggu Verifikasi')
+        ->first();
+
+    if ($existingPembayaran) {
+        return redirect()->back()
+            ->with('error', 'Masih ada pembayaran yang sedang diverifikasi untuk invoice ini.');
+    }
+
+    // Upload bukti pembayaran
+    $buktiPath = null;
+    
+    try {
+        if ($request->hasFile('bukti_pembayaran')) {
+            $file = $request->file('bukti_pembayaran');
+            
+            // Generate nama file
+            $fileName = 'bukti_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            
+            // Path tujuan di public/storage/pembayaran
+            $destinationPath = public_path('storage/pembayaran');
+            
+            // Buat folder jika belum ada
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0777, true);
+            }
+            
+            // Move file
+            $file->move($destinationPath, $fileName);
+            
+            // Simpan path relatif
+            $buktiPath = 'pembayaran/' . $fileName;
+        } else {
             return redirect()->back()
-                ->with('error', 'Total invoice tidak valid. Silakan hubungi admin.');
+                ->with('error', 'File bukti pembayaran tidak ditemukan.')
+                ->withInput();
         }
+    } catch (\Exception $e) {
+        \Log::error('Upload error: ' . $e->getMessage());
+        return redirect()->back()
+            ->with('error', 'Gagal mengupload file: ' . $e->getMessage())
+            ->withInput();
+    }
 
-        // Cek apakah sudah ada pembayaran pending untuk invoice ini
-        $existingPembayaran = Pembayaran::where('invoice_id', $invoice->id)
-            ->where('status', 'Menunggu Verifikasi')
-            ->first();
-
-        if ($existingPembayaran) {
-            return redirect()->back()
-                ->with('error', 'Masih ada pembayaran yang sedang diverifikasi untuk invoice ini.');
-        }
-
-        // Upload bukti pembayaran
-        $buktiPath = $request->file('bukti_pembayaran')->store('pembayaran', 'public');
-
-        // Simpan pembayaran
+    // Simpan pembayaran
+    try {
         $pembayaran = Pembayaran::create([
             'invoice_id' => $invoice->id,
             'jumlah_dibayar' => $invoice->jumlah,
@@ -123,9 +158,10 @@ class PembayaranController extends Controller
             'status' => 'Menunggu Verifikasi',
         ]);
 
-        // Update status invoice dan pesanan agar konsisten
+        // Update status invoice
         $invoice->update(['status' => 'Menunggu Verifikasi']);
 
+        // Update status pesanan
         if ($invoice->pesanan) {
             $pesananStatus = $invoice->tipe === 'Pelunasan'
                 ? 'Pelunasan Dibayar - Menunggu Verifikasi'
@@ -134,10 +170,21 @@ class PembayaranController extends Controller
             $invoice->pesanan->update(['status' => $pesananStatus]);
         }
 
-        // Redirect ke halaman success dengan ID pembayaran
         return redirect()->route('client.pembayaran.success', $pembayaran->id)
             ->with('success', 'Bukti pembayaran berhasil diupload dan menunggu verifikasi admin.');
+
+    } catch (\Exception $e) {
+        // Hapus file jika gagal simpan ke database
+        if ($buktiPath && file_exists(public_path('storage/' . $buktiPath))) {
+            unlink(public_path('storage/' . $buktiPath));
+        }
+        
+        \Log::error('Simpan pembayaran error: ' . $e->getMessage());
+        return redirect()->back()
+            ->with('error', 'Gagal menyimpan data pembayaran: ' . $e->getMessage())
+            ->withInput();
     }
+}
 
     /**
      * Menampilkan detail pembayaran

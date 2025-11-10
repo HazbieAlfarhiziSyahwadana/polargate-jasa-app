@@ -3,41 +3,148 @@
 @section('title', 'Lihat Layanan')
 
 @section('content')
-<div class="mb-6">
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Animasi hanya untuk first load */
+    .page-load .animate-fade {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .page-load .animate-slide {
+        animation: slideUp 0.5s ease-out;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .page-load .delay-100 { animation-delay: 0.1s; }
+    .page-load .delay-200 { animation-delay: 0.2s; }
+    .page-load .delay-300 { animation-delay: 0.3s; }
+    .page-load .delay-400 { animation-delay: 0.4s; }
+    .page-load .delay-500 { animation-delay: 0.5s; }
+    .page-load .delay-600 { animation-delay: 0.6s; }
+
+    .card {
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
+    }
+
+    .search-input {
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .image-hover {
+        transition: transform 0.3s ease;
+    }
+
+    .image-hover:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-primary {
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .layanan-card {
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+
+    .layanan-card.hidden-filter {
+        display: none;
+    }
+</style>
+
+<div class="mb-6 animate-fade">
     <h1 class="text-3xl font-bold text-gray-800">Layanan Kami</h1>
     <p class="text-gray-600">Pilih layanan yang sesuai dengan kebutuhan Anda</p>
 </div>
 
-<!-- Filter & Search -->
-<div class="card mb-6">
-    <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-            <label for="kategori" class="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
-            <select name="kategori" id="kategori" class="input-field" onchange="this.form.submit()">
+<!-- Search and Filter Section -->
+<div class="card mb-6 animate-slide delay-100">
+    <div class="flex flex-col md:flex-row gap-4">
+        <!-- Search Bar -->
+        <div class="flex-1">
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" 
+                       id="searchInput"
+                       class="search-input w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition"
+                       placeholder="Cari layanan berdasarkan nama atau kategori...">
+            </div>
+        </div>
+
+        <!-- Filter Kategori -->
+        <div class="md:w-48">
+            <select id="kategoriFilter" 
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition">
                 <option value="">Semua Kategori</option>
-                <option value="Multimedia" {{ request('kategori') == 'Multimedia' ? 'selected' : '' }}>Multimedia</option>
-                <option value="IT" {{ request('kategori') == 'IT' ? 'selected' : '' }}>IT</option>
+                <option value="multimedia">Multimedia</option>
+                <option value="it">IT</option>
             </select>
         </div>
-        <div>
-            <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Cari Layanan</label>
-            <input type="text" name="search" id="search" value="{{ request('search') }}" class="input-field" placeholder="Nama layanan">
-        </div>
-        <div class="flex items-end">
-            <button type="submit" class="btn-primary mr-2">Cari</button>
-            <a href="{{ route('client.layanan.index') }}" class="btn-secondary">Reset</a>
-        </div>
-    </form>
+
+        <!-- Reset Button -->
+        <button id="resetFilter" 
+                class="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Reset
+        </button>
+    </div>
+
+    <!-- Search Results Info -->
+    <div id="searchInfo" class="mt-4 text-sm text-gray-600 hidden">
+        Menampilkan <span id="resultCount" class="font-semibold text-primary-600"></span> hasil
+    </div>
 </div>
 
 <!-- Layanan Grid -->
 @if($layanan->count() > 0)
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    @foreach($layanan as $item)
-    <div class="card hover:shadow-xl transition-shadow duration-300">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="layananGrid">
+    @foreach($layanan as $index => $item)
+    <div class="card hover:shadow-xl transition-all duration-300 layanan-card animate-slide delay-{{ min($index * 100 + 200, 600) }}"
+         data-nama="{{ strtolower($item->nama_layanan) }}"
+         data-kategori="{{ strtolower($item->kategori) }}"
+         data-harga="{{ $item->harga_mulai }}">
         <!-- Gambar -->
-        <div class="mb-4">
-            <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}" class="w-full h-48 rounded-lg object-contain bg-gray-100 border border-gray-200">
+        <div class="mb-4 overflow-hidden rounded-lg">
+            <img src="{{ $item->gambar_url }}" 
+                 alt="{{ $item->nama_layanan }}" 
+                 class="w-full h-48 rounded-lg object-contain bg-gray-100 border border-gray-200 image-hover">
         </div>
 
         <!-- Badge Kategori -->
@@ -81,12 +188,115 @@
 </div>
 
 @else
-<div class="card text-center py-12">
-    <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-    </svg>
-    <h3 class="mt-4 text-lg font-medium text-gray-900">Tidak Ada Layanan Ditemukan</h3>
-    <p class="mt-2 text-sm text-gray-500">Coba ubah filter atau kata kunci pencarian</p>
+<div class="card text-center py-12 animate-slide delay-200">
+    <div class="flex flex-col items-center justify-center gap-4">
+        <div class="bg-gray-100 rounded-full p-6">
+            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <div>
+            <h3 class="text-lg font-medium text-gray-900">Tidak Ada Layanan Ditemukan</h3>
+            <p class="text-sm text-gray-500 mt-1">Coba ubah filter atau kata kunci pencarian</p>
+        </div>
+    </div>
 </div>
 @endif
+
+<!-- No Results Message (untuk filter) -->
+<div id="noResults" class="hidden card text-center py-12">
+    <div class="flex flex-col items-center justify-center gap-4">
+        <div class="bg-gray-100 rounded-full p-6">
+            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+        </div>
+        <div>
+            <p class="text-gray-500 font-medium">Tidak ada hasil ditemukan</p>
+            <p class="text-gray-400 text-sm mt-1">Coba ubah kata kunci pencarian Anda</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isFirstLoad = !sessionStorage.getItem('layanan_client_loaded');
+        
+        if (isFirstLoad) {
+            document.body.classList.add('page-load');
+            sessionStorage.setItem('layanan_client_loaded', 'true');
+            
+            setTimeout(() => {
+                document.body.classList.remove('page-load');
+            }, 1000);
+        }
+
+        // Search and Filter Functionality
+        const searchInput = document.getElementById('searchInput');
+        const kategoriFilter = document.getElementById('kategoriFilter');
+        const resetButton = document.getElementById('resetFilter');
+        const layananCards = document.querySelectorAll('.layanan-card');
+        const searchInfo = document.getElementById('searchInfo');
+        const resultCount = document.getElementById('resultCount');
+        const noResults = document.getElementById('noResults');
+        const layananGrid = document.getElementById('layananGrid');
+
+        function filterLayanan() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const kategoriValue = kategoriFilter.value.toLowerCase();
+            let visibleCount = 0;
+
+            layananCards.forEach(card => {
+                const nama = card.dataset.nama;
+                const kategori = card.dataset.kategori;
+
+                const matchSearch = nama.includes(searchTerm) || kategori.includes(searchTerm);
+                const matchKategori = kategoriValue === '' || kategori === kategoriValue;
+
+                if (matchSearch && matchKategori) {
+                    card.classList.remove('hidden-filter');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden-filter');
+                }
+            });
+
+            // Update search info
+            if (searchTerm || kategoriValue) {
+                searchInfo.classList.remove('hidden');
+                resultCount.textContent = visibleCount;
+            } else {
+                searchInfo.classList.add('hidden');
+            }
+
+            // Show/hide no results message
+            if (visibleCount === 0 && layananCards.length > 0) {
+                noResults.classList.remove('hidden');
+                if (layananGrid) layananGrid.style.display = 'none';
+            } else {
+                noResults.classList.add('hidden');
+                if (layananGrid) layananGrid.style.display = 'grid';
+            }
+        }
+
+        // Event listeners
+        if (searchInput) searchInput.addEventListener('input', filterLayanan);
+        if (kategoriFilter) kategoriFilter.addEventListener('change', filterLayanan);
+        
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                searchInput.value = '';
+                kategoriFilter.value = '';
+                filterLayanan();
+            });
+        }
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (e.target.activeElement.tagName === 'A' && 
+            e.target.activeElement.getAttribute('href') !== '#') {
+            sessionStorage.removeItem('layanan_client_loaded');
+        }
+    });
+</script>
 @endsection

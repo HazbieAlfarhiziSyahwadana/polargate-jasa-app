@@ -17,12 +17,14 @@ use App\Http\Controllers\Admin\PembayaranController as AdminPembayaranController
 use App\Http\Controllers\Admin\LaporanController as AdminLaporanController;
 use App\Http\Controllers\Admin\ProfilController as AdminProfilController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\RevisiController as AdminRevisiController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\LayananController as ClientLayananController;
 use App\Http\Controllers\Client\PesananController as ClientPesananController;
 use App\Http\Controllers\Client\InvoiceController as ClientInvoiceController;
 use App\Http\Controllers\Client\PembayaranController as ClientPembayaranController;
 use App\Http\Controllers\Client\ProfilController as ClientProfilController;
+use App\Http\Controllers\Client\RevisiController as ClientRevisiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -111,6 +113,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Kelola Pesanan
     Route::prefix('pesanan')->name('pesanan.')->group(function () {
         Route::get('/', [AdminPesananController::class, 'index'])->name('index');
+        Route::get('/badge-count', [AdminPesananController::class, 'getBadgeCount'])->name('badge-count'); // ← API Badge Count
         Route::get('/{pesanan}', [AdminPesananController::class, 'show'])->name('show');
         Route::patch('/{pesanan}/update-status', [AdminPesananController::class, 'updateStatus'])->name('update-status');
         Route::post('/{pesanan}/upload-preview', [AdminPesananController::class, 'uploadPreview'])->name('upload-preview');
@@ -149,6 +152,15 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
         Route::get('/filter', [AdminPembayaranController::class, 'filter'])->name('filter');
     });
 
+    // Kelola Revisi
+    Route::prefix('revisi')->name('revisi.')->group(function () {
+        Route::get('/', [AdminRevisiController::class, 'index'])->name('index');
+        Route::get('/{revisi}', [AdminRevisiController::class, 'show'])->name('show');
+        Route::patch('/{revisi}/update-status', [AdminRevisiController::class, 'updateStatus'])->name('update-status');
+        Route::get('/{revisi}/download/{index}', [AdminRevisiController::class, 'downloadFile'])->name('download-file');
+        Route::delete('/{revisi}', [AdminRevisiController::class, 'destroy'])->name('destroy');
+    });
+
     // Laporan
     Route::prefix('laporan')->name('laporan.')->group(function () {
         Route::get('/keuangan', [AdminLaporanController::class, 'keuangan'])->name('keuangan');
@@ -177,6 +189,8 @@ Route::prefix('client')->middleware(['auth', 'client'])->name('client.')->group(
     
     // Dashboard
     Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
+    // TAMBAHAN: Route untuk realtime data dashboard
+    Route::get('/dashboard/realtime-data', [ClientDashboardController::class, 'realtimeData'])->name('dashboard.realtime');
 
     // Lihat Layanan
     Route::prefix('layanan')->name('layanan.')->group(function () {
@@ -190,6 +204,7 @@ Route::prefix('client')->middleware(['auth', 'client'])->name('client.')->group(
         Route::get('/create/{layanan}', [ClientPesananController::class, 'create'])->name('create');
         Route::post('/', [ClientPesananController::class, 'store'])->name('store');
         Route::get('/{pesanan}', [ClientPesananController::class, 'show'])->name('show');
+        Route::patch('/{pesanan}/cancel', [ClientPesananController::class, 'cancel'])->name('cancel');
         Route::post('/{pesanan}/approve-preview', [ClientPesananController::class, 'approvePreview'])->name('approve-preview');
         Route::post('/{pesanan}/request-revision', [ClientPesananController::class, 'requestRevision'])->name('request-revision');
         Route::get('/{pesanan}/download-final', [ClientPesananController::class, 'downloadFinal'])->name('download-final');
@@ -211,6 +226,15 @@ Route::prefix('client')->middleware(['auth', 'client'])->name('client.')->group(
         Route::get('/{invoice_id}/show', [ClientPembayaranController::class, 'show'])->name('show');
         Route::delete('/{pembayaran_id}', [ClientPembayaranController::class, 'destroy'])->name('destroy');
         Route::get('/success/{pembayaran}', [ClientPembayaranController::class, 'success'])->name('success');
+    });
+
+    // Revisi
+    Route::prefix('revisi')->name('revisi.')->group(function () {
+        Route::get('/', [ClientRevisiController::class, 'index'])->name('index');
+        Route::get('/pesanan/{pesanan}/create', [ClientRevisiController::class, 'create'])->name('create');
+        Route::post('/pesanan/{pesanan}', [ClientRevisiController::class, 'store'])->name('store');
+        Route::get('/{revisi}', [ClientRevisiController::class, 'show'])->name('show');
+        Route::get('/{revisi}/download/{index}', [ClientRevisiController::class, 'downloadFile'])->name('download-file');
     });
 
     // Profil Client

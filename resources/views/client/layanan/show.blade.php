@@ -3,9 +3,164 @@
 @section('title', $layanan->nama_layanan)
 
 @section('content')
-<div class="mb-6">
-    <a href="{{ route('client.layanan.index') }}" class="text-primary-600 hover:text-primary-700 text-sm">
-        ← Kembali ke Daftar Layanan
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Animasi hanya untuk first load */
+    .page-load .animate-fade {
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .page-load .animate-slide {
+        animation: slideUp 0.5s ease-out;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .page-load .animate-slide-left {
+        animation: slideInLeft 0.6s ease-out;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .page-load .animate-slide-right {
+        animation: slideInRight 0.6s ease-out;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .page-load .delay-100 { animation-delay: 0.1s; }
+    .page-load .delay-200 { animation-delay: 0.2s; }
+    .page-load .delay-300 { animation-delay: 0.3s; }
+    .page-load .delay-400 { animation-delay: 0.4s; }
+    .page-load .delay-500 { animation-delay: 0.5s; }
+
+    .card {
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+    .card:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .paket-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .paket-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+        border-color: #3b82f6;
+    }
+
+    .addon-card {
+        transition: all 0.3s ease;
+    }
+
+    .addon-card:hover {
+        background-color: #f3f4f6;
+        transform: translateX(4px);
+    }
+
+    .related-card {
+        transition: all 0.3s ease;
+    }
+
+    .related-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .image-zoom {
+        transition: transform 0.5s ease;
+    }
+
+    .image-zoom:hover {
+        transform: scale(1.05);
+    }
+
+    .btn-primary, .btn-secondary {
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover, .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .info-item {
+        transition: all 0.2s ease;
+    }
+
+    .info-item:hover {
+        transform: translateX(4px);
+    }
+
+    .back-button {
+        transition: all 0.2s ease;
+    }
+
+    .back-button:hover {
+        transform: translateX(-4px);
+        color: #1e40af;
+    }
+
+    .sidebar-card {
+        position: sticky;
+        top: 20px;
+    }
+
+    @media (max-width: 1024px) {
+        .sidebar-card {
+            position: relative;
+            top: 0;
+        }
+    }
+</style>
+
+<div class="mb-6 animate-fade">
+    <a href="{{ route('client.layanan.index') }}" class="back-button text-primary-600 hover:text-primary-700 text-sm font-medium inline-flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Kembali ke Daftar Layanan
     </a>
 </div>
 
@@ -13,21 +168,42 @@
     <!-- Detail Layanan -->
     <div class="lg:col-span-2 space-y-6">
         <!-- Gambar & Info Utama -->
-        <div class="card">
-            <img src="{{ $layanan->gambar_url }}" alt="{{ $layanan->nama_layanan }}" class="w-full h-64 object-contain rounded-lg mb-4 bg-gray-100 border border-gray-200">
+        <div class="card animate-slide-left">
+            <div class="overflow-hidden rounded-lg mb-4 bg-gray-50">
+                <img src="{{ $layanan->gambar_url }}" 
+                     alt="{{ $layanan->nama_layanan }}" 
+                     class="w-full h-64 object-contain rounded-lg bg-gray-100 border border-gray-200 image-zoom">
+            </div>
             
-            <span class="badge-info mb-2">{{ $layanan->kategori }}</span>
-            <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ $layanan->nama_layanan }}</h1>
+            <span class="badge-info mb-3 inline-block">{{ $layanan->kategori }}</span>
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-4">{{ $layanan->nama_layanan }}</h1>
             <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ $layanan->deskripsi }}</p>
         </div>
 
         <!-- Paket -->
         @if($layanan->paket->count() > 0)
-        <div class="card">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Pilih Paket</h2>
+        <div class="card animate-slide-left delay-100">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-primary-100 rounded-lg p-3">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Pilih Paket</h2>
+                    <p class="text-sm text-gray-600">Pilih paket yang sesuai dengan kebutuhan Anda</p>
+                </div>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                @foreach($layanan->paket as $paket)
-                <div class="border-2 border-gray-200 rounded-lg p-5 hover:border-primary-500 transition-colors">
+                @foreach($layanan->paket as $index => $paket)
+                <div class="paket-card border-2 border-gray-200 rounded-lg p-5 {{ $index === 0 ? 'border-primary-500 bg-primary-50' : '' }}">
+                    @if($index === 0)
+                    <span class="inline-block bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-3">
+                        POPULER
+                    </span>
+                    @endif
+                    
                     <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $paket->nama_paket }}</h3>
                     <p class="text-3xl font-bold text-primary-600 mb-3">
                         Rp {{ number_format($paket->harga, 0, ',', '.') }}
@@ -35,40 +211,49 @@
                     <p class="text-sm text-gray-600 mb-4">{{ $paket->deskripsi }}</p>
                     
                     <div class="mb-4">
-                        <p class="text-sm font-semibold text-gray-700 mb-2">Fitur:</p>
-                        <ul class="space-y-1">
+                        <p class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Fitur yang Anda dapatkan:
+                        </p>
+                        <ul class="space-y-2">
                             @php
                                 $fiturArray = is_string($paket->fitur) ? json_decode($paket->fitur, true) : $paket->fitur;
                             @endphp
                             @if($fiturArray && is_array($fiturArray))
                                 @foreach($fiturArray as $fitur)
-                                <li class="text-sm text-gray-700 flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <li class="text-sm text-gray-700 flex items-start gap-2">
+                                    <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
-                                    {{ $fitur }}
+                                    <span>{{ $fitur }}</span>
                                 </li>
                                 @endforeach
                             @endif
                         </ul>
                     </div>
 
-                    <div class="flex items-center justify-between text-sm text-gray-600 mb-4 pb-4 border-b">
-                        <div>
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex items-center justify-between text-sm text-gray-600 mb-4 pb-4 border-b border-gray-200">
+                        <div class="flex items-center gap-1">
+                            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            {{ $paket->durasi_pengerjaan }} hari
+                            <span class="font-medium">{{ $paket->durasi_pengerjaan }} hari</span>
                         </div>
-                        <div>
-                            <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center gap-1">
+                            <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                             </svg>
-                            {{ $paket->jumlah_revisi }}x revisi
+                            <span class="font-medium">{{ $paket->jumlah_revisi }}x revisi</span>
                         </div>
                     </div>
 
-                    <a href="{{ route('client.pesanan.create', $layanan) }}?paket={{ $paket->id }}" class="btn-primary w-full">
+                    <a href="{{ route('client.pesanan.create', $layanan) }}?paket={{ $paket->id }}" 
+                       class="btn-primary w-full flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
                         Pilih Paket Ini
                     </a>
                 </div>
@@ -79,19 +264,35 @@
 
         <!-- Add-ons -->
         @if($layanan->addons->count() > 0)
-        <div class="card">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Add-ons Tersedia</h2>
-            <p class="text-sm text-gray-600 mb-4">Tingkatkan layanan Anda dengan add-ons tambahan</p>
+        <div class="card animate-slide-left delay-200">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-purple-100 rounded-lg p-3">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Add-ons Tersedia</h2>
+                    <p class="text-sm text-gray-600">Tingkatkan layanan Anda dengan add-ons tambahan</p>
+                </div>
+            </div>
             
             <div class="space-y-3">
                 @foreach($layanan->addons as $addon)
-                <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center">
-                    <div class="flex-1">
-                        <h4 class="font-semibold text-gray-800">{{ $addon->nama_addon }}</h4>
-                        <p class="text-sm text-gray-600">{{ $addon->deskripsi }}</p>
+                <div class="addon-card bg-gray-50 p-4 rounded-lg flex justify-between items-center border border-gray-100">
+                    <div class="flex items-start gap-3 flex-1">
+                        <div class="bg-white rounded-lg p-2 border border-gray-200">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800 mb-1">{{ $addon->nama_addon }}</h4>
+                            <p class="text-sm text-gray-600">{{ $addon->deskripsi }}</p>
+                        </div>
                     </div>
                     <div class="text-right ml-4">
-                        <p class="font-bold text-primary-600">+Rp {{ number_format($addon->harga, 0, ',', '.') }}</p>
+                        <p class="font-bold text-purple-600 text-lg">+Rp {{ number_format($addon->harga, 0, ',', '.') }}</p>
                     </div>
                 </div>
                 @endforeach
@@ -101,12 +302,28 @@
 
         <!-- Layanan Terkait -->
         @if(isset($layananTerkait) && $layananTerkait->count() > 0)
-        <div class="card">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Layanan Terkait</h2>
+        <div class="card animate-slide-left delay-300">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-blue-100 rounded-lg p-3">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Layanan Terkait</h2>
+                    <p class="text-sm text-gray-600">Mungkin Anda juga tertarik dengan layanan ini</p>
+                </div>
+            </div>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @foreach($layananTerkait as $item)
-                <a href="{{ route('client.layanan.show', $item) }}" class="bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors">
-                    <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}" class="w-full h-32 object-contain rounded mb-3 bg-gray-100 border border-gray-200">
+                <a href="{{ route('client.layanan.show', $item) }}" class="related-card bg-gray-50 p-4 rounded-lg hover:bg-white border border-gray-100">
+                    <div class="overflow-hidden rounded-lg mb-3 bg-white">
+                        <img src="{{ $item->gambar_url }}" 
+                             alt="{{ $item->nama_layanan }}" 
+                             class="w-full h-32 object-contain rounded border border-gray-200">
+                    </div>
+                    <span class="badge-info text-xs mb-2 inline-block">{{ $item->kategori }}</span>
                     <h4 class="font-semibold text-gray-800 mb-1">{{ $item->nama_layanan }}</h4>
                     <p class="text-sm text-gray-600 mb-2 line-clamp-2">{{ Str::limit($item->deskripsi, 80) }}</p>
                     <p class="text-primary-600 font-semibold">Mulai Rp {{ number_format($item->harga_mulai, 0, ',', '.') }}</p>
@@ -120,30 +337,38 @@
     <!-- Sidebar -->
     <div class="space-y-6">
         <!-- Quick Info -->
-        <div class="card bg-primary-50 border border-primary-200">
-            <h3 class="font-bold text-gray-800 mb-4">Informasi Layanan</h3>
+        <div class="card bg-primary-50 border border-primary-200 sidebar-card animate-slide-right">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-primary-600 rounded-lg p-2">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="font-bold text-gray-800">Informasi Layanan</h3>
+            </div>
+            
             <div class="space-y-3 text-sm">
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-primary-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="info-item flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <span class="text-gray-700">Garansi kepuasan pelanggan</span>
                 </div>
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-primary-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="info-item flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     <span class="text-gray-700">Pengerjaan tepat waktu</span>
                 </div>
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-primary-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="info-item flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                     <span class="text-gray-700">Revisi sesuai paket</span>
                 </div>
-                <div class="flex items-start">
-                    <svg class="w-5 h-5 text-primary-600 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+                <div class="info-item flex items-start gap-3">
+                    <svg class="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
                     <span class="text-gray-700">Tim profesional berpengalaman</span>
                 </div>
@@ -151,33 +376,80 @@
         </div>
 
         <!-- Harga Mulai -->
-        <div class="card bg-gradient-to-br from-primary-500 to-primary-600 text-white">
-            <p class="text-primary-100 text-sm mb-2">Harga Mulai Dari</p>
-            <p class="text-4xl font-bold mb-4">Rp {{ number_format($layanan->harga_mulai, 0, ',', '.') }}</p>
-            <a href="{{ route('client.pesanan.create', $layanan) }}" class="btn-secondary w-full bg-white text-primary-600 hover:bg-gray-100">
-                Pesan Sekarang
-            </a>
+        <div class="card bg-gradient-to-br from-primary-500 to-primary-600 text-white sidebar-card animate-slide-right delay-100">
+            <div class="text-center">
+                <p class="text-primary-100 text-sm mb-2">Harga Mulai Dari</p>
+                <p class="text-4xl font-bold mb-4">Rp {{ number_format($layanan->harga_mulai, 0, ',', '.') }}</p>
+                <a href="{{ route('client.pesanan.create', $layanan) }}" 
+                   class="btn-secondary w-full bg-white text-primary-600 hover:bg-gray-100 flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                    </svg>
+                    Pesan Sekarang
+                </a>
+            </div>
         </div>
 
         <!-- Butuh Bantuan -->
-        <div class="card">
-            <h3 class="font-bold text-gray-800 mb-3">Butuh Bantuan?</h3>
+        <div class="card sidebar-card animate-slide-right delay-200">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="bg-green-100 rounded-lg p-2">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </div>
+                <h3 class="font-bold text-gray-800">Butuh Bantuan?</h3>
+            </div>
+            
             <p class="text-sm text-gray-600 mb-4">Hubungi tim kami untuk konsultasi gratis</p>
-            <div class="space-y-2">
-                <a href="https://wa.me/6281234567890" target="_blank" class="flex items-center text-sm text-gray-700 hover:text-primary-600">
-                    <svg class="w-5 h-5 mr-2 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+            
+            <div class="space-y-3">
+                <a href="https://wa.me/6281234567890" 
+                   target="_blank" 
+                   class="flex items-center text-sm text-gray-700 hover:text-green-600 p-3 bg-gray-50 rounded-lg hover:bg-green-50 transition-all">
+                    <svg class="w-5 h-5 mr-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
                     </svg>
-                    WhatsApp: 0812-3456-7890
+                    <div>
+                        <p class="font-medium">WhatsApp</p>
+                        <p class="text-xs text-gray-500">0812-3456-7890</p>
+                    </div>
                 </a>
-                <a href="mailto:info@polargate.com" class="flex items-center text-sm text-gray-700 hover:text-primary-600">
-                    <svg class="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                
+                <a href="mailto:info@polargate.com" 
+                   class="flex items-center text-sm text-gray-700 hover:text-red-600 p-3 bg-gray-50 rounded-lg hover:bg-red-50 transition-all">
+                    <svg class="w-5 h-5 mr-3 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
-                    info@polargate.com
+                    <div>
+                        <p class="font-medium">Email</p>
+                        <p class="text-xs text-gray-500">info@polargate.com</p>
+                    </div>
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isFirstLoad = !sessionStorage.getItem('layanan_show_loaded');
+        
+        if (isFirstLoad) {
+            document.body.classList.add('page-load');
+            sessionStorage.setItem('layanan_show_loaded', 'true');
+            
+            setTimeout(() => {
+                document.body.classList.remove('page-load');
+            }, 1000);
+        }
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (e.target.activeElement.tagName === 'A' && 
+            e.target.activeElement.getAttribute('href') !== '#') {
+            sessionStorage.removeItem('layanan_show_loaded');
+        }
+    });
+</script>
 @endsection

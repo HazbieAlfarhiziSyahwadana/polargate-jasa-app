@@ -34,14 +34,14 @@ class Revisi extends Model
     }
 
     // Scopes
-    public function scopePending($query)
+    public function scopeDiminta($query)
     {
-        return $query->where('status', 'Pending');
+        return $query->where('status', 'Diminta');
     }
 
-    public function scopeDikerjakan($query)
+    public function scopeSedangDikerjakan($query)
     {
-        return $query->where('status', 'Dikerjakan');
+        return $query->where('status', 'Sedang Dikerjakan');
     }
 
     public function scopeSelesai($query)
@@ -49,17 +49,30 @@ class Revisi extends Model
         return $query->where('status', 'Selesai');
     }
 
+    public function scopeDitolak($query)
+    {
+        return $query->where('status', 'Ditolak');
+    }
+
+    // Scope untuk filter by user
+    public function scopeByUser($query, $userId)
+    {
+        return $query->whereHas('pesanan', function($q) use ($userId) {
+            $q->where('user_id', $userId);
+        });
+    }
+
     // Helper Methods
     public function getStatusBadgeAttribute()
     {
         $badges = [
-            'Pending' => 'bg-yellow-100 text-yellow-800',
-            'Dikerjakan' => 'bg-blue-100 text-blue-800',
-            'Selesai' => 'bg-green-100 text-green-800',
-            'Ditolak' => 'bg-red-100 text-red-800',
+            'Diminta' => 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+            'Sedang Dikerjakan' => 'bg-blue-100 text-blue-800 border border-blue-300',
+            'Selesai' => 'bg-green-100 text-green-800 border border-green-300',
+            'Ditolak' => 'bg-red-100 text-red-800 border border-red-300',
         ];
 
-        return $badges[$this->status] ?? 'bg-gray-100 text-gray-800';
+        return $badges[$this->status] ?? 'bg-gray-100 text-gray-800 border border-gray-300';
     }
 
     public function getFormattedCreatedAtAttribute()
@@ -84,6 +97,44 @@ class Revisi extends Model
         return $this->hasFiles() ? count($this->file_referensi) : 0;
     }
 
+    // Get file extension
+    public function getFileExtension($index)
+    {
+        if (!$this->hasFiles() || !isset($this->file_referensi[$index])) {
+            return null;
+        }
+
+        return pathinfo($this->file_referensi[$index], PATHINFO_EXTENSION);
+    }
+
+    // Get file name
+    public function getFileName($index)
+    {
+        if (!$this->hasFiles() || !isset($this->file_referensi[$index])) {
+            return null;
+        }
+
+        return basename($this->file_referensi[$index]);
+    }
+
+    // Check if revisi can be edited
+    public function canBeEdited()
+    {
+        return $this->status === 'Diminta';
+    }
+
+    // Check if revisi is completed
+    public function isCompleted()
+    {
+        return $this->status === 'Selesai';
+    }
+
+    // Check if revisi is in progress
+    public function isInProgress()
+    {
+        return $this->status === 'Sedang Dikerjakan';
+    }
+
     // Boot method untuk auto increment revisi_ke
     protected static function boot()
     {
@@ -94,6 +145,19 @@ class Revisi extends Model
                 $lastRevisi = self::where('pesanan_id', $revisi->pesanan_id)
                     ->max('revisi_ke');
                 $revisi->revisi_ke = $lastRevisi ? $lastRevisi + 1 : 1;
+            }
+
+            // Set status default jika belum ada
+            if (empty($revisi->status)) {
+                $revisi->status = 'Diminta';
+            }
+        });
+
+        static::updated(function ($revisi) {
+            // Auto set tanggal selesai ketika status berubah menjadi Selesai
+            if ($revisi->status === 'Selesai' && empty($revisi->tanggal_selesai)) {
+                $revisi->tanggal_selesai = now();
+                $revisi->saveQuietly();
             }
         });
     }

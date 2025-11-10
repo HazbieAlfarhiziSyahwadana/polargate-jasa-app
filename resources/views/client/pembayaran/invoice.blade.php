@@ -11,6 +11,25 @@
     <p class="text-gray-600">Upload bukti pembayaran Anda</p>
 </div>
 
+{{-- Alert Messages --}}
+@if(session('error'))
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <strong class="font-bold">Error!</strong>
+    <span class="block sm:inline">{{ session('error') }}</span>
+</div>
+@endif
+
+@if($errors->any())
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+    <strong class="font-bold">Terjadi kesalahan:</strong>
+    <ul class="mt-2 list-disc list-inside">
+        @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+</div>
+@endif
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Form Upload -->
     <div class="lg:col-span-2">
@@ -55,10 +74,15 @@
         <div class="card">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Upload Bukti Pembayaran</h2>
             
-            <form action="{{ route('client.pembayaran.store') }}" method="POST" enctype="multipart/form-data">
+            {{-- PENTING: enctype="multipart/form-data" wajib ada untuk upload file --}}
+            <form action="{{ route('client.pembayaran.store') }}" 
+                  method="POST" 
+                  enctype="multipart/form-data"
+                  id="paymentForm">
                 @csrf
+                
+                {{-- Hidden fields --}}
                 <input type="hidden" name="invoice_id" value="{{ $invoice->id }}">
-                <input type="hidden" name="jumlah" value="{{ $invoice->jumlah }}">
 
                 <!-- Metode Pembayaran -->
                 <div class="mb-4">
@@ -94,7 +118,7 @@
                         type="file" 
                         name="bukti_pembayaran" 
                         id="bukti_pembayaran" 
-                        accept="image/*"
+                        accept="image/jpeg,image/jpg,image/png"
                         class="input-field @error('bukti_pembayaran') border-red-500 @enderror"
                         required
                         onchange="previewImage(event)"
@@ -106,35 +130,22 @@
                     
                     <!-- Preview -->
                     <div id="imagePreview" class="mt-3 hidden">
-                        <img src="" alt="Preview" class="max-w-full h-auto rounded-lg border max-h-96">
+                        <p class="text-sm text-gray-600 mb-2">Preview:</p>
+                        <img id="preview" src="" alt="Preview" class="max-w-full h-auto rounded-lg border max-h-96">
                     </div>
-                </div>
-
-                <!-- Catatan -->
-                <div class="mb-6">
-                    <label for="catatan" class="block text-gray-700 text-sm font-medium mb-2">
-                        Catatan (Opsional)
-                    </label>
-                    <textarea 
-                        name="catatan" 
-                        id="catatan" 
-                        rows="3" 
-                        class="input-field"
-                        placeholder="Contoh: Transfer dari rekening BCA a.n. John Doe"
-                    >{{ old('catatan') }}</textarea>
-                    @error('catatan')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    
+                    <!-- File Info -->
+                    <div id="fileInfo" class="mt-2 text-xs text-gray-600 hidden"></div>
                 </div>
 
                 <!-- Submit Button -->
                 <div class="flex justify-end space-x-3">
                     <a href="{{ route('client.invoice.index') }}" class="btn-secondary">Batal</a>
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" id="submitBtn" class="btn-primary">
                         <svg class="w-5 h-5 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        Upload Bukti Pembayaran
+                        <span id="btnText">Upload Bukti Pembayaran</span>
                     </button>
                 </div>
             </form>
@@ -194,12 +205,40 @@
 
 @push('scripts')
 <script>
+// Preview image dan validasi
 function previewImage(event) {
     const preview = document.getElementById('imagePreview');
-    const previewImg = preview.querySelector('img');
+    const previewImg = document.getElementById('preview');
+    const fileInfo = document.getElementById('fileInfo');
     const file = event.target.files[0];
     
     if (file) {
+        // Validasi tipe file
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Format file tidak didukung! Gunakan JPG, JPEG, atau PNG');
+            event.target.value = '';
+            preview.classList.add('hidden');
+            fileInfo.classList.add('hidden');
+            return;
+        }
+        
+        // Validasi ukuran file (2MB = 2048KB)
+        const maxSize = 2048 * 1024; // 2MB in bytes
+        if (file.size > maxSize) {
+            alert('Ukuran file terlalu besar! Maksimal 2MB');
+            event.target.value = '';
+            preview.classList.add('hidden');
+            fileInfo.classList.add('hidden');
+            return;
+        }
+        
+        // Show file info
+        const fileSizeKB = (file.size / 1024).toFixed(2);
+        fileInfo.textContent = `File: ${file.name} (${fileSizeKB} KB)`;
+        fileInfo.classList.remove('hidden');
+        
+        // Preview image
         const reader = new FileReader();
         reader.onload = function(e) {
             previewImg.src = e.target.result;
@@ -208,8 +247,68 @@ function previewImage(event) {
         reader.readAsDataURL(file);
     } else {
         preview.classList.add('hidden');
+        fileInfo.classList.add('hidden');
     }
 }
+
+// Validasi form sebelum submit
+document.getElementById('paymentForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('bukti_pembayaran');
+    const metodeInput = document.getElementById('metode_pembayaran');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    
+    // Validasi metode pembayaran
+    if (!metodeInput.value) {
+        e.preventDefault();
+        alert('Silakan pilih metode pembayaran!');
+        metodeInput.focus();
+        return false;
+    }
+    
+    // Validasi file
+    if (!fileInput.files || fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('Silakan pilih file bukti pembayaran!');
+        fileInput.focus();
+        return false;
+    }
+    
+    // Validasi ukuran file lagi sebelum submit
+    const file = fileInput.files[0];
+    const maxSize = 2048 * 1024; // 2MB
+    if (file.size > maxSize) {
+        e.preventDefault();
+        alert('Ukuran file terlalu besar! Maksimal 2MB');
+        fileInput.value = '';
+        return false;
+    }
+    
+    // Confirm submit
+    if (!confirm('Apakah Anda yakin data yang diinput sudah benar?')) {
+        e.preventDefault();
+        return false;
+    }
+    
+    // Disable button dan show loading
+    submitBtn.disabled = true;
+    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    btnText.textContent = 'Mengupload...';
+    
+    return true;
+});
+
+// Reset form jika ada error dan kembali
+window.addEventListener('pageshow', function(event) {
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnText.textContent = 'Upload Bukti Pembayaran';
+    }
+});
 </script>
 @endpush
 @endsection
