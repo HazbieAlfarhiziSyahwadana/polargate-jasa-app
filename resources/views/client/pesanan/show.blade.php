@@ -384,11 +384,19 @@
                 </div>
                 <div class="flex-1">
                     <h3 class="font-bold text-gray-800 mb-2">Pesanan Dibatalkan</h3>
-                    <p class="text-sm text-gray-700 mb-3">
-                        Pesanan ini telah dibatalkan pada {{ $pesanan->dibatalkan_at ? $pesanan->dibatalkan_at->format('d M Y H:i') : '-' }}
-                    </p>
-                    @if($pesanan->alasan_pembatalan)
                     <div class="bg-white p-3 rounded-lg border border-red-200">
+                        <p class="text-sm text-gray-700 flex items-center gap-2 mb-2">
+                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="font-semibold">Waktu Pembatalan:</span>
+                        </p>
+                        <p class="text-sm text-gray-900 font-medium ml-6">
+                            {{ $pesanan->dibatalkan_at ? $pesanan->dibatalkan_at->format('d M Y, H:i') : ($pesanan->updated_at ? $pesanan->updated_at->format('d M Y, H:i') : '-') }} WIB
+                        </p>
+                    </div>
+                    @if($pesanan->alasan_pembatalan)
+                    <div class="bg-white p-3 rounded-lg border border-red-200 mt-3">
                         <p class="text-xs font-semibold text-gray-700 mb-1">Alasan Pembatalan:</p>
                         <p class="text-sm text-gray-700">{{ $pesanan->alasan_pembatalan }}</p>
                     </div>
@@ -940,24 +948,9 @@
                 Tindakan ini tidak dapat dibatalkan!
             </p>
             
-            <form id="cancelOrderForm" method="POST" class="space-y-3">
+            <form id="cancelOrderForm" method="POST">
                 @csrf
                 @method('PATCH')
-                
-                <div>
-                    <label for="cancelReason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Alasan Pembatalan <span class="text-red-500">*</span>
-                    </label>
-                    <textarea 
-                        id="cancelReason" 
-                        name="alasan_pembatalan" 
-                        rows="3" 
-                        required
-                        minlength="10"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition text-sm"
-                        placeholder="Minimal 10 karakter..."></textarea>
-                    <p class="text-xs text-gray-500 mt-1">Minimal 10 karakter</p>
-                </div>
                 
                 <div class="flex gap-3">
                     <button type="button" 
@@ -1012,12 +1005,10 @@
     function closeCancelModal() {
         const modal = document.getElementById('cancelOrderModal');
         const form = document.getElementById('cancelOrderForm');
-        const textarea = document.getElementById('cancelReason');
         
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
         form.reset();
-        textarea.value = '';
     }
 
     document.getElementById('cancelOrderModal')?.addEventListener('click', function(e) {

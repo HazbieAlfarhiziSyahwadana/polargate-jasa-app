@@ -459,31 +459,18 @@
                 Tindakan ini tidak dapat dibatalkan!
             </p>
             
-            <form id="cancelOrderForm" method="POST" class="space-y-3">
+            <form id="cancelOrderForm" method="POST" class="space-y-4">
                 @csrf
                 @method('PATCH')
-                
-                <div>
-                    <label for="cancelReason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Alasan Pembatalan <span class="text-red-500">*</span>
-                    </label>
-                    <textarea 
-                        id="cancelReason" 
-                        name="alasan_pembatalan" 
-                        rows="3" 
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition text-sm"
-                        placeholder="Masukkan alasan pembatalan..."></textarea>
-                </div>
                 
                 <div class="flex gap-3">
                     <button type="button" 
                             onclick="closeCancelModal()" 
-                            class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium">
+                            class="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium">
                         Batal
                     </button>
                     <button type="submit" 
-                            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                            class="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
                         Ya, Batalkan
                     </button>
                 </div>
