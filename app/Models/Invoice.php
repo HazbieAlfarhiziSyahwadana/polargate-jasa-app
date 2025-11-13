@@ -58,4 +58,30 @@ class Invoice extends Model
     {
         return now()->greaterThan($this->tanggal_jatuh_tempo) && $this->status !== 'Lunas';
     }
+
+    public function getIsDitolakKarenaJatuhTempoAttribute()
+    {
+        return $this->status === 'Ditolak' && 
+               $this->alasan_penolakan === 'Pembayaran melewati batas jatuh tempo';
+    }
+
+    // Method untuk membatalkan invoice yang melewati jatuh tempo
+    public function batalkanJikaJatuhTempo()
+    {
+        if ($this->is_jatuh_tempo && !in_array($this->status, ['Lunas', 'Ditolak'])) {
+            $this->update([
+                'status' => 'Ditolak',
+                'alasan_penolakan' => 'Pembayaran melewati batas jatuh tempo'
+            ]);
+
+            // Batalkan pesanan terkait
+            $this->pesanan->update([
+                'status' => 'Dibatalkan'
+            ]);
+
+            return true;
+        }
+
+        return false;
+    }
 }

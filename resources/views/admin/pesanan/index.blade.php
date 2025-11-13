@@ -428,7 +428,7 @@
 
             <!-- Search Results Info -->
             <div id="searchInfo" class="text-sm text-gray-600 hidden">
-                Menampilkan <span id="resultCount" class="font-semibold text-primary-600"></span> hasil dari <span id="totalCount" class="font-semibold">{{ $pesanan->count() }}</span> pesanan
+                Menampilkan <span id="resultCount" class="font-semibold text-primary-600">0</span> hasil dari <span id="totalCount" class="font-semibold">{{ $pesanan->count() }}</span> pesanan
             </div>
         </div>
     </div>
@@ -573,117 +573,150 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // First load animation
-        const isFirstLoad = !sessionStorage.getItem('pesanan_loaded');
+document.addEventListener('DOMContentLoaded', function () {
+    // First-load animation
+    const isFirstLoad = !sessionStorage.getItem('pesanan_loaded');
+    if (isFirstLoad) {
+        document.body.classList.add('page-load');
+        sessionStorage.setItem('pesanan_loaded', 'true');
+        setTimeout(() => document.body.classList.remove('page-load'), 1000);
+    }
+
+    // === Realtime Search & Filter ===
+    const realTimeSearch = document.getElementById('realTimeSearch');
+    const statusFilter = document.getElementById('statusFilter');
+    const resetButton = document.getElementById('resetFilter');
+    const pesananRows = document.querySelectorAll('.pesanan-row');
+    const searchInfo = document.getElementById('searchInfo');
+    const resultCount = document.getElementById('resultCount');
+    const noResults = document.getElementById('noResults');
+    const emptyRow = document.getElementById('emptyRow');
+
+    // Fungsi untuk mendapatkan nilai status dari filter mobile (Alpine.js)
+    function getMobileStatusValue() {
+        const mobileFilter = document.getElementById('statusFilterMobile');
+        return mobileFilter ? mobileFilter.value : '';
+    }
+
+    // Fungsi utama filter
+    function filterPesanan() {
+        const searchTerm = realTimeSearch.value.toLowerCase().trim();
+        const statusValue = statusFilter ? statusFilter.value : getMobileStatusValue();
         
-        if (isFirstLoad) {
-            document.body.classList.add('page-load');
-            sessionStorage.setItem('pesanan_loaded', 'true');
-            
-            setTimeout(() => {
-                document.body.classList.remove('page-load');
-            }, 1000);
+        let visibleCount = 0;
+        let hasVisibleRows = false;
+
+        pesananRows.forEach(row => {
+            const kode = row.dataset.kode || '';
+            const client = row.dataset.client || '';
+            const email = row.dataset.email || '';
+            const layanan = row.dataset.layanan || '';
+            const paket = row.dataset.paket || '';
+            const status = row.dataset.status || '';
+
+            // Pencarian: cocokkan dengan semua field
+            const matchesSearch = !searchTerm || 
+                kode.includes(searchTerm) ||
+                client.includes(searchTerm) ||
+                email.includes(searchTerm) ||
+                layanan.includes(searchTerm) ||
+                paket.includes(searchTerm);
+
+            // Filter status
+            const matchesStatus = !statusValue || status === statusValue;
+
+            // Tampilkan atau sembunyikan baris
+            if (matchesSearch && matchesStatus) {
+                row.style.display = '';
+                visibleCount++;
+                hasVisibleRows = true;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update info pencarian
+        if (searchTerm || statusValue) {
+            searchInfo.classList.remove('hidden');
+            resultCount.textContent = visibleCount;
+        } else {
+            searchInfo.classList.add('hidden');
         }
 
-        // Real-time Search and Filter
-        const realTimeSearch = document.getElementById('realTimeSearch');
-        const statusFilter = document.getElementById('statusFilter');
-        const statusFilterMobile = document.getElementById('statusFilterMobile');
-        const resetButton = document.getElementById('resetFilter');
-        const pesananRows = document.querySelectorAll('.pesanan-row');
-        const searchInfo = document.getElementById('searchInfo');
-        const resultCount = document.getElementById('resultCount');
-        const noResults = document.getElementById('noResults');
-        const emptyRow = document.getElementById('emptyRow');
+        // Tampilkan/sembunyikan pesan "no results"
+        if (!hasVisibleRows && pesananRows.length > 0) {
+            noResults.classList.remove('hidden');
+            if (emptyRow) emptyRow.style.display = 'none';
+        } else {
+            noResults.classList.add('hidden');
+            if (emptyRow && emptyRow.style.display === 'none') {
+                emptyRow.style.display = '';
+            }
+        }
+    }
 
-        function filterPesanan() {
-            const searchTerm = realTimeSearch.value.toLowerCase();
-            const statusValue = statusFilter ? statusFilter.value : (statusFilterMobile ? statusFilterMobile.value : '');
-            let visibleCount = 0;
+    // Event listeners
+    if (realTimeSearch) {
+        realTimeSearch.addEventListener('input', filterPesanan);
+    }
 
-            pesananRows.forEach(row => {
-                const kode = row.dataset.kode;
-                const client = row.dataset.client;
-                const email = row.dataset.email;
-                const layanan = row.dataset.layanan;
-                const paket = row.dataset.paket;
-                const status = row.dataset.status;
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterPesanan);
+    }
 
-                const matchSearch = kode.includes(searchTerm) || 
-                                  client.includes(searchTerm) || 
-                                  email.includes(searchTerm) ||
-                                  layanan.includes(searchTerm) ||
-                                  paket.includes(searchTerm);
-                const matchStatus = statusValue === '' || status === statusValue;
-
-                if (matchSearch && matchStatus) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
+    // Observer untuk mobile filter (Alpine.js)
+    const mobileFilter = document.getElementById('statusFilterMobile');
+    if (mobileFilter) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                    filterPesanan();
                 }
             });
+        });
+        observer.observe(mobileFilter, { attributes: true });
+    }
 
-            // Update search info
-            if (searchTerm || statusValue) {
-                searchInfo.classList.remove('hidden');
-                resultCount.textContent = visibleCount;
-            } else {
-                searchInfo.classList.add('hidden');
+    // Reset filter
+    if (resetButton) {
+        resetButton.addEventListener('click', function() {
+            // Reset search input
+            if (realTimeSearch) {
+                realTimeSearch.value = '';
             }
 
-            // Show/hide no results message
-            if (visibleCount === 0 && pesananRows.length > 0) {
-                noResults.classList.remove('hidden');
-                if (emptyRow) emptyRow.style.display = 'none';
-            } else {
-                noResults.classList.add('hidden');
-            }
-        }
-
-        // Event listeners
-        realTimeSearch.addEventListener('input', filterPesanan);
-        
-        // Desktop select
-        if (statusFilter) {
-            statusFilter.addEventListener('change', filterPesanan);
-        }
-        
-        // Mobile custom dropdown
-        if (statusFilterMobile) {
-            const observer = new MutationObserver(filterPesanan);
-            observer.observe(statusFilterMobile, { attributes: true, attributeFilter: ['value'] });
-        }
-        
-        resetButton.addEventListener('click', () => {
-            realTimeSearch.value = '';
-            
-            // Reset desktop select
+            // Reset desktop filter
             if (statusFilter) {
                 statusFilter.value = '';
             }
-            
-            // Reset mobile custom dropdown
-            if (statusFilterMobile) {
-                statusFilterMobile.value = '';
-                const alpineComponent = statusFilterMobile.closest('[x-data]');
+
+            // Reset mobile filter (Alpine.js)
+            const mobileFilter = document.getElementById('statusFilterMobile');
+            if (mobileFilter) {
+                mobileFilter.value = '';
+                // Trigger Alpine.js update
+                const alpineComponent = mobileFilter.closest('[x-data]');
                 if (alpineComponent && alpineComponent.__x) {
                     alpineComponent.__x.$data.selected = '';
                 }
             }
-            
+
+            // Apply filter reset
             filterPesanan();
         });
-    });
+    }
 
-    // Reset flag ketika pindah ke halaman lain
-    window.addEventListener('beforeunload', function(e) {
-        if (e.target.activeElement.tagName === 'A' && 
-            e.target.activeElement.getAttribute('href') !== '#') {
-            sessionStorage.removeItem('pesanan_loaded');
-        }
-    });
+    // Initial filter (untuk menangani state awal)
+    filterPesanan();
+});
+
+// Reset flag ketika pindah halaman
+window.addEventListener('beforeunload', function (e) {
+    if (e.target.activeElement.tagName === 'A' &&
+        e.target.activeElement.getAttribute('href') !== '#') {
+        sessionStorage.removeItem('pesanan_loaded');
+    }
+});
 </script>
 @endpush
 @endsection

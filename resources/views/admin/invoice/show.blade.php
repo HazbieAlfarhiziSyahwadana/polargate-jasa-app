@@ -8,6 +8,18 @@
         <div>
             <h1 class="text-3xl font-bold text-gray-800">Invoice {{ $invoice->nomor_invoice }}</h1>
             <p class="text-gray-600">Detail invoice pembayaran</p>
+            
+            {{-- ✅ Badge pesanan dibatalkan --}}
+            @if($invoice->pesanan->status === 'Dibatalkan')
+            <div class="mt-2">
+                <span class="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Pesanan Telah Dibatalkan
+                </span>
+            </div>
+            @endif
         </div>
         <div class="flex space-x-2">
             <a href="{{ route('admin.invoice.download', $invoice) }}" class="btn-primary">
@@ -21,10 +33,46 @@
     </div>
 </div>
 
+{{-- ✅ Alert Pembatalan --}}
+@if($invoice->status === 'Dibatalkan' || $invoice->pesanan->status === 'Dibatalkan')
+<div class="bg-gray-50 border-l-4 border-gray-500 p-4 mb-6 rounded-r-lg">
+    <div class="flex items-start gap-3">
+        <svg class="w-6 h-6 text-gray-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                {{ $invoice->pesanan->status === 'Dibatalkan' ? 'Pesanan Dibatalkan' : 'Invoice Dibatalkan' }}
+            </h3>
+            <div class="space-y-2">
+                <p class="text-sm text-gray-700">
+                    <span class="font-medium">Alasan:</span>
+                    @if($invoice->pesanan->status === 'Dibatalkan' && $invoice->pesanan->alasan_pembatalan)
+                        {{ $invoice->pesanan->alasan_pembatalan }}
+                    @elseif($invoice->alasan_penolakan)
+                        {{ $invoice->alasan_penolakan }}
+                    @else
+                        Invoice dibatalkan karena melewati batas jatuh tempo
+                    @endif
+                </p>
+                @if($invoice->pesanan->dibatalkan_at)
+                <p class="text-sm text-gray-600 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Dibatalkan pada: {{ \Carbon\Carbon::parse($invoice->pesanan->dibatalkan_at)->format('d M Y H:i') }}
+                </p>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Detail Invoice -->
     <div class="lg:col-span-2">
-        <div class="card">
+        <div class="card {{ $invoice->status === 'Dibatalkan' ? 'opacity-75' : '' }}">
             <div class="border-b pb-4 mb-4">
                 <div class="flex justify-between items-start">
                     <div>
@@ -69,6 +117,8 @@
                         <span class="badge-success">Lunas</span>
                         @elseif($invoice->status == 'Menunggu Verifikasi')
                         <span class="badge-warning">Menunggu Verifikasi</span>
+                        @elseif($invoice->status == 'Dibatalkan')
+                        <span class="badge-secondary">Dibatalkan</span>
                         @else
                         <span class="badge-danger">Belum Dibayar</span>
                         @endif
@@ -80,7 +130,17 @@
             <div class="mb-6">
                 <h3 class="font-semibold text-gray-800 mb-3">Detail Pesanan</h3>
                 <div class="bg-gray-50 p-4 rounded">
-                    <p class="text-sm text-gray-600">Kode Pesanan: <span class="font-semibold text-gray-900">{{ $invoice->pesanan->kode_pesanan }}</span></p>
+                    <p class="text-sm text-gray-600">
+                        Kode Pesanan: <span class="font-semibold text-gray-900">{{ $invoice->pesanan->kode_pesanan }}</span>
+                        @if($invoice->pesanan->status === 'Dibatalkan')
+                        <span class="inline-flex items-center gap-1 ml-2 px-2 py-0.5 bg-gray-200 text-gray-700 rounded text-xs">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Dibatalkan
+                        </span>
+                        @endif
+                    </p>
                     <p class="text-sm text-gray-600 mt-1">Layanan: <span class="font-semibold text-gray-900">{{ $invoice->pesanan->layanan->nama_layanan }}</span></p>
                     <p class="text-sm text-gray-600 mt-1">Paket: <span class="font-semibold text-gray-900">{{ $invoice->pesanan->paket->nama_paket ?? '-' }}</span></p>
                 </div>
@@ -194,6 +254,3 @@
     </div>
 </div>
 @endsection
-
-
-

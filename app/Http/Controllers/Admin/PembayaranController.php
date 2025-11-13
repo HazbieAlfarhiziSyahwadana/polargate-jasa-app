@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Pembayaran;
 use App\Models\Invoice;
+use App\Mail\InvoiceMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class PembayaranController extends Controller
 {
@@ -61,11 +64,35 @@ class PembayaranController extends Controller
                 }
             }
 
+            // Kirim email ke client
+            try {
+                $emailType = $invoice->tipe === 'DP' ? 'dp_verified' : 'pelunasan_verified';
+                Mail::to($pesanan->client->email)
+                    ->send(new InvoiceMail($invoice, $pembayaran, $emailType));
+                
+                Log::info('Email invoice terkirim', [
+                    'invoice' => $invoice->nomor_invoice,
+                    'client' => $pesanan->client->email,
+                    'type' => $emailType
+                ]);
+            } catch (\Exception $emailError) {
+                Log::error('Gagal mengirim email invoice', [
+                    'error' => $emailError->getMessage(),
+                    'invoice' => $invoice->nomor_invoice
+                ]);
+                // Lanjutkan proses meskipun email gagal
+            }
+
             return redirect()
                 ->route('admin.pembayaran.pending')
-                ->with('success', '✅ Pembayaran berhasil diverifikasi! Client akan menerima notifikasi.');
+                ->with('success', '✅ Pembayaran berhasil diverifikasi! Invoice telah dikirim ke email client.');
                 
         } catch (\Exception $e) {
+            Log::error('Gagal memverifikasi pembayaran', [
+                'error' => $e->getMessage(),
+                'pembayaran_id' => $pembayaran->id
+            ]);
+            
             return redirect()
                 ->route('admin.pembayaran.pending')
                 ->with('error', '❌ Gagal memverifikasi pembayaran: ' . $e->getMessage());
@@ -111,11 +138,33 @@ class PembayaranController extends Controller
                 ]);
             }
 
+            // Kirim email ke client
+            try {
+                Mail::to($pesanan->client->email)
+                    ->send(new InvoiceMail($invoice, $pembayaran, 'rejected'));
+                
+                Log::info('Email penolakan pembayaran terkirim', [
+                    'invoice' => $invoice->nomor_invoice,
+                    'client' => $pesanan->client->email
+                ]);
+            } catch (\Exception $emailError) {
+                Log::error('Gagal mengirim email penolakan', [
+                    'error' => $emailError->getMessage(),
+                    'invoice' => $invoice->nomor_invoice
+                ]);
+                // Lanjutkan proses meskipun email gagal
+            }
+
             return redirect()
                 ->route('admin.pembayaran.pending')
-                ->with('success', '⚠️ Pembayaran ditolak! Client akan menerima notifikasi dengan alasan penolakan.');
+                ->with('success', '⚠️ Pembayaran ditolak! Invoice dengan alasan penolakan telah dikirim ke email client.');
                 
         } catch (\Exception $e) {
+            Log::error('Gagal menolak pembayaran', [
+                'error' => $e->getMessage(),
+                'pembayaran_id' => $pembayaran->id
+            ]);
+            
             return redirect()
                 ->route('admin.pembayaran.pending')
                 ->with('error', '❌ Gagal menolak pembayaran: ' . $e->getMessage());

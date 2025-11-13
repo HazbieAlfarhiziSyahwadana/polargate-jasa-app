@@ -84,6 +84,23 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
     }
+
+    /* Badge untuk file hasil */
+    .file-hasil-badge {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.9; transform: scale(1.05); }
+    }
 </style>
 
 <div class="mb-6 animate-fade">
@@ -203,6 +220,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
                     <h3 class="text-lg font-bold text-gray-800">Revisi #{{ $item->revisi_ke }} - {{ $item->pesanan->kode_pesanan }}</h3>
+                    
+                    {{-- ✅ BADGE FILE HASIL --}}
+                    @if($item->status == 'Selesai' && $item->hasFileHasil())
+                    <span class="file-hasil-badge">
+                        {{ $item->file_hasil_count }} File Hasil
+                    </span>
+                    @endif
                 </div>
                 <p class="text-sm text-gray-600 flex items-center gap-2 ml-8">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,6 +276,19 @@
             <p class="text-sm text-gray-700">{{ Str::limit($item->catatan_revisi, 150) }}</p>
         </div>
 
+        {{-- ✅ CATATAN ADMIN (jika ada) --}}
+        @if($item->status == 'Selesai' && $item->catatan_admin)
+        <div class="bg-green-50 p-4 rounded-lg mb-4 border-l-4 border-green-500">
+            <p class="text-xs text-green-700 mb-2 font-medium flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Catatan dari Admin:
+            </p>
+            <p class="text-sm text-green-800">{{ $item->catatan_admin }}</p>
+        </div>
+        @endif
+
         <div class="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
             <a href="{{ route('client.revisi.show', $item) }}" class="btn-primary text-sm flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,6 +304,16 @@
                 </svg>
                 Lihat Pesanan
             </a>
+
+            {{-- ✅ BUTTON DOWNLOAD FILE HASIL --}}
+            @if($item->status == 'Selesai' && $item->hasFileHasil())
+            <button onclick="showFileHasilModal({{ json_encode($item->id) }})" class="btn-success text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download File Hasil ({{ $item->file_hasil_count }})
+            </button>
+            @endif
         </div>
     </div>
     @endforeach
@@ -313,6 +360,25 @@
     </div>
 </div>
 @endif
+
+{{-- ✅ MODAL UNTUK DOWNLOAD FILE HASIL --}}
+<div id="fileHasilModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h3 class="text-xl font-bold text-gray-800">File Hasil Revisi</h3>
+                <button onclick="closeFileHasilModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="fileHasilContent" class="p-6">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -388,6 +454,81 @@
                 statusFilter.value = '';
                 filterRevisi();
             });
+        }
+    });
+
+    // ✅ FUNCTION UNTUK MODAL FILE HASIL
+    function showFileHasilModal(revisiId) {
+        const modal = document.getElementById('fileHasilModal');
+        const content = document.getElementById('fileHasilContent');
+        
+        // Show loading
+        content.innerHTML = '<div class="text-center py-8"><div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div></div>';
+        modal.classList.remove('hidden');
+        
+        // Fetch file data
+        fetch(`/client/revisi/${revisiId}/file-hasil`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    let html = '<div class="space-y-3">';
+                    data.files.forEach((file, index) => {
+                        html += `
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-primary-300 transition">
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    ${getFileIcon(file.extension)}
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-gray-900 text-sm truncate">${file.name}</p>
+                                        <p class="text-xs text-gray-500 uppercase">${file.extension} • ${file.size}</p>
+                                    </div>
+                                </div>
+                                <a href="/client/revisi/${revisiId}/download-hasil/${index}" 
+                                   class="text-primary-600 hover:text-primary-700 p-2 hover:bg-primary-50 rounded-lg transition">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                    </svg>
+                                </a>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    content.innerHTML = html;
+                } else {
+                    content.innerHTML = '<p class="text-center text-red-500">Gagal memuat file</p>';
+                }
+            })
+            .catch(error => {
+                content.innerHTML = '<p class="text-center text-red-500">Terjadi kesalahan</p>';
+            });
+    }
+
+    function closeFileHasilModal() {
+        document.getElementById('fileHasilModal').classList.add('hidden');
+    }
+
+    function getFileIcon(extension) {
+        const imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        const pdfExts = ['pdf'];
+        
+        if (imageExts.includes(extension.toLowerCase())) {
+            return `<svg class="w-8 h-8 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>`;
+        } else if (pdfExts.includes(extension.toLowerCase())) {
+            return `<svg class="w-8 h-8 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>`;
+        } else {
+            return `<svg class="w-8 h-8 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>`;
+        }
+    }
+
+    // Close modal on outside click
+    document.getElementById('fileHasilModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeFileHasilModal();
         }
     });
 

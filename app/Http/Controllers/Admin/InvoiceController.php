@@ -15,7 +15,7 @@ class InvoiceController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Invoice::with(['pesanan.client']);
+        $query = Invoice::with(['pesanan.client', 'pembayaran']);
 
         // Filter berdasarkan tipe
         if ($request->has('tipe') && $request->tipe != '') {
@@ -24,12 +24,32 @@ class InvoiceController extends Controller
 
         // Filter berdasarkan status
         if ($request->has('status') && $request->status != '') {
-            $query->where('status', $request->status);
+            if ($request->status == 'Menunggu Verifikasi') {
+                // Jika mencari yang menunggu verifikasi, cari invoice yang punya pembayaran dengan status tersebut
+                $query->whereHas('pembayaran', function($q) {
+                    $q->where('status', 'Menunggu Verifikasi');
+                });
+            } else {
+                // Status lainnya (Belum Dibayar, Lunas) ada di tabel invoice
+                $query->where('status', $request->status);
+            }
         }
 
         $invoices = $query->latest()->paginate(15);
 
-        return view('admin.invoice.index', compact('invoices'));
+        // Hitung statistik untuk cards
+        $allInvoices = Invoice::with('pembayaran')->get();
+        
+        $stats = [
+            'total' => $allInvoices->count(),
+            'lunas' => $allInvoices->where('status', 'Lunas')->count(),
+            'belum_dibayar' => $allInvoices->where('status', 'Belum Dibayar')->count(),
+            'menunggu_verifikasi' => $allInvoices->filter(function($invoice) {
+                return $invoice->pembayaran->where('status', 'Menunggu Verifikasi')->count() > 0;
+            })->count()
+        ];
+
+        return view('admin.invoice.index', compact('invoices', 'stats'));
     }
 
     public function show(Invoice $invoice)
@@ -159,18 +179,24 @@ class InvoiceController extends Controller
             ->with('success', 'Pembayaran berhasil diverifikasi!');
     }
 
-    public function rejectPayment(Request $request, Pembayaran $pembayaran)
-    {
-        if ($pembayaran->status !== 'Menunggu Verifikasi') {
-            return redirect()->back()
-                ->with('error', 'Pembayaran ini sudah diverifikasi sebelumnya!');
-        }
+   // Di app/Http/Controllers/Admin/InvoiceController.php
 
-        $validated = $request->validate([
-            'catatan_verifikasi' => 'required|string',
-        ], [
-            'catatan_verifikasi.required' => 'Alasan penolakan wajib diisi.',
-        ]);
+public function rejectPayment(Request $request, Pembayaran $pembayaran)
+{
+    if ($pembayaran->status !== 'Menunggu Verifikasi') {
+        return redirect()->back()
+            ->with('error', 'Pembayaran ini sudah diverifikasi sebelumnya!');
+    }
+
+    $validated = $request->validate([
+        'catatan_verifikasi' => 'required|string',
+        'batalkan_pesanan' => 'nullable|boolean', // Opsi untuk membatalkan pesanan
+    ], [
+        'catatan_verifikasi.required' => 'Alasan penolakan wajib diisi.',
+    ]);
+
+    try {
+        DB::beginTransaction();
 
         // Update pembayaran
         $pembayaran->update([
@@ -180,9 +206,29 @@ class InvoiceController extends Controller
             'verified_by' => Auth::id(),
         ]);
 
+        // Jika admin memilih untuk membatalkan pesanan
+        if ($request->has('batalkan_pesanan') && $request->batalkan_pesanan) {
+            $pesanan = $pembayaran->invoice->pesanan;
+            
+            $pesanan->update([
+                'status' => 'Dibatalkan',
+                'alasan_pembatalan' => 'Pesanan dibatalkan karena pembayaran ditolak: ' . $validated['catatan_verifikasi']
+            ]);
+
+            // Invoice akan otomatis dibatalkan melalui observer
+        }
+
+        DB::commit();
+
         return redirect()->back()
             ->with('success', 'Pembayaran ditolak. Client akan diminta upload ulang bukti pembayaran.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Error menolak pembayaran: ' . $e->getMessage());
+        return redirect()->back()->with('error', 'Gagal menolak pembayaran: ' . $e->getMessage());
     }
+}
 
     public function download(Invoice $invoice)
     {

@@ -25,6 +25,7 @@ use App\Http\Controllers\Client\InvoiceController as ClientInvoiceController;
 use App\Http\Controllers\Client\PembayaranController as ClientPembayaranController;
 use App\Http\Controllers\Client\ProfilController as ClientProfilController;
 use App\Http\Controllers\Client\RevisiController as ClientRevisiController;
+use App\Http\Controllers\Client\ClientNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,6 +72,44 @@ Route::post('password/reset', [ResetPasswordController::class, 'reset'])
     ->name('password.update')
     ->middleware('guest');
 
+// ===== TEST EMAIL ROUTE (DEVELOPMENT ONLY - HAPUS DI PRODUCTION) =====
+Route::get('/test-email/{type?}', function ($type = 'dp_verified') {
+    $invoice = \App\Models\Invoice::with(['pesanan.client', 'pesanan.layanan'])->first();
+    
+    if (!$invoice) {
+        return '<h1>❌ Data invoice tidak ditemukan</h1><p>Pastikan sudah ada data invoice di database.</p>';
+    }
+    
+    $pembayaran = $invoice->pembayaran()->first();
+    
+    if (!$pembayaran) {
+        // Buat pembayaran dummy untuk preview
+        $pembayaran = new \App\Models\Pembayaran([
+            'invoice_id' => $invoice->id,
+            'jumlah_dibayar' => $invoice->jumlah,
+            'metode_pembayaran' => 'Transfer Bank',
+            'status' => 'Diterima',
+            'catatan_verifikasi' => 'Pembayaran telah diverifikasi dan diterima.',
+        ]);
+    }
+    
+    // Validasi type
+    if (!in_array($type, ['dp_verified', 'pelunasan_verified', 'rejected'])) {
+        $type = 'dp_verified';
+    }
+    
+    // Jika type rejected, set alasan penolakan
+    if ($type === 'rejected') {
+        $invoice->alasan_penolakan = 'Bukti transfer tidak jelas. Mohon upload ulang dengan kualitas yang lebih baik.';
+        $invoice->status = 'Ditolak';
+    } else {
+        $invoice->status = 'Lunas';
+        $invoice->alasan_penolakan = null;
+    }
+    
+    return new \App\Mail\InvoiceMail($invoice, $pembayaran, $type);
+})->name('test.email');
+
 // ===== ROUTE ADMIN (SUPERADMIN) =====
 Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(function () {
     
@@ -78,19 +117,22 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     // Kelola Layanan
-    Route::prefix('layanan')->name('layanan.')->group(function () {
-        Route::get('/', [AdminLayananController::class, 'index'])->name('index');
-        Route::get('/create', [AdminLayananController::class, 'create'])->name('create');
-        Route::post('/', [AdminLayananController::class, 'store'])->name('store');
-        Route::get('/{layanan}/edit', [AdminLayananController::class, 'edit'])->name('edit');
-        Route::put('/{layanan}', [AdminLayananController::class, 'update'])->name('update');
-        Route::delete('/{layanan}', [AdminLayananController::class, 'destroy'])->name('destroy');
-        Route::patch('/{layanan}/toggle-status', [AdminLayananController::class, 'toggleStatus'])->name('toggle-status');
-    });
+    // Dalam group admin layanan
+Route::prefix('layanan')->name('layanan.')->group(function () {
+    Route::get('/', [AdminLayananController::class, 'index'])->name('index');
+    Route::get('/search', [AdminLayananController::class, 'search'])->name('search'); // 🔍 SEARCH
+    Route::get('/create', [AdminLayananController::class, 'create'])->name('create');
+    Route::post('/', [AdminLayananController::class, 'store'])->name('store');
+    Route::get('/{layanan}/edit', [AdminLayananController::class, 'edit'])->name('edit');
+    Route::put('/{layanan}', [AdminLayananController::class, 'update'])->name('update');
+    Route::delete('/{layanan}', [AdminLayananController::class, 'destroy'])->name('destroy');
+    Route::patch('/{layanan}/toggle-status', [AdminLayananController::class, 'toggleStatus'])->name('toggle-status');
+});
 
     // Kelola Paket
     Route::prefix('paket')->name('paket.')->group(function () {
         Route::get('/', [AdminPaketController::class, 'index'])->name('index');
+        Route::get('/search', [AdminPaketController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/create', [AdminPaketController::class, 'create'])->name('create');
         Route::post('/', [AdminPaketController::class, 'store'])->name('store');
         Route::get('/{paket}/edit', [AdminPaketController::class, 'edit'])->name('edit');
@@ -102,6 +144,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Kelola Add-on
     Route::prefix('addon')->name('addon.')->group(function () {
         Route::get('/', [AdminAddonController::class, 'index'])->name('index');
+        Route::get('/search', [AdminAddonController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/create', [AdminAddonController::class, 'create'])->name('create');
         Route::post('/', [AdminAddonController::class, 'store'])->name('store');
         Route::get('/{addon}/edit', [AdminAddonController::class, 'edit'])->name('edit');
@@ -113,7 +156,8 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Kelola Pesanan
     Route::prefix('pesanan')->name('pesanan.')->group(function () {
         Route::get('/', [AdminPesananController::class, 'index'])->name('index');
-        Route::get('/badge-count', [AdminPesananController::class, 'getBadgeCount'])->name('badge-count'); // ← API Badge Count
+        Route::get('/search', [AdminPesananController::class, 'search'])->name('search'); // 🔍 SEARCH
+        Route::get('/badge-count', [AdminPesananController::class, 'getBadgeCount'])->name('badge-count');
         Route::get('/{pesanan}', [AdminPesananController::class, 'show'])->name('show');
         Route::patch('/{pesanan}/update-status', [AdminPesananController::class, 'updateStatus'])->name('update-status');
         Route::post('/{pesanan}/upload-preview', [AdminPesananController::class, 'uploadPreview'])->name('upload-preview');
@@ -125,6 +169,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Kelola Client
     Route::prefix('client')->name('client.')->group(function () {
         Route::get('/', [AdminClientController::class, 'index'])->name('index');
+        Route::get('/search', [AdminClientController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/{user}', [AdminClientController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [AdminClientController::class, 'edit'])->name('edit');
         Route::put('/{user}', [AdminClientController::class, 'update'])->name('update');
@@ -135,6 +180,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Kelola Invoice
     Route::prefix('invoice')->name('invoice.')->group(function () {
         Route::get('/', [AdminInvoiceController::class, 'index'])->name('index');
+        Route::get('/search', [AdminInvoiceController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::post('/{pesanan}/create-dp', [AdminInvoiceController::class, 'createDP'])->name('create-dp');
         Route::post('/{pesanan}/create-pelunasan', [AdminInvoiceController::class, 'createPelunasan'])->name('create-pelunasan');
         Route::get('/{invoice}', [AdminInvoiceController::class, 'show'])->name('show');
@@ -144,6 +190,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
     // Verifikasi Pembayaran
     Route::prefix('pembayaran')->name('pembayaran.')->group(function () {
         Route::get('/', [AdminPembayaranController::class, 'index'])->name('index');
+        Route::get('/search', [AdminPembayaranController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/pending', [AdminPembayaranController::class, 'pending'])->name('pending');
         Route::get('/{pembayaran}', [AdminPembayaranController::class, 'show'])->name('show');
         Route::post('/{pembayaran}/verify', [AdminPembayaranController::class, 'verify'])->name('verify');
@@ -152,11 +199,13 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->name('admin.')->group(fun
         Route::get('/filter', [AdminPembayaranController::class, 'filter'])->name('filter');
     });
 
-    // Kelola Revisi
+    // ✅ Kelola Revisi (UPDATED)
     Route::prefix('revisi')->name('revisi.')->group(function () {
         Route::get('/', [AdminRevisiController::class, 'index'])->name('index');
+        Route::get('/search', [AdminRevisiController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/{revisi}', [AdminRevisiController::class, 'show'])->name('show');
         Route::patch('/{revisi}/update-status', [AdminRevisiController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{revisi}/upload-link', [AdminRevisiController::class, 'uploadLink'])->name('upload-link'); // ✅ BARU
         Route::get('/{revisi}/download/{index}', [AdminRevisiController::class, 'downloadFile'])->name('download-file');
         Route::delete('/{revisi}', [AdminRevisiController::class, 'destroy'])->name('destroy');
     });
@@ -189,18 +238,22 @@ Route::prefix('client')->middleware(['auth', 'client'])->name('client.')->group(
     
     // Dashboard
     Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('dashboard');
-    // TAMBAHAN: Route untuk realtime data dashboard
     Route::get('/dashboard/realtime-data', [ClientDashboardController::class, 'realtimeData'])->name('dashboard.realtime');
 
     // Lihat Layanan
-    Route::prefix('layanan')->name('layanan.')->group(function () {
-        Route::get('/', [ClientLayananController::class, 'index'])->name('index');
-        Route::get('/{layanan}', [ClientLayananController::class, 'show'])->name('show');
-    });
-
+    // Dalam group client layanan
+Route::prefix('layanan')->name('layanan.')->group(function () {
+    Route::get('/', [ClientLayananController::class, 'index'])->name('index');
+    Route::get('/search', [ClientLayananController::class, 'search'])->name('search');
+    Route::get('/kategori/{kategori}', [ClientLayananController::class, 'byCategory'])->name('category');
+    Route::get('/{layanan}', [ClientLayananController::class, 'show'])->name('show');
+    Route::get('/api/featured', [ClientLayananController::class, 'getFeatured'])->name('api.featured');
+    Route::get('/api/stats', [ClientLayananController::class, 'getStats'])->name('api.stats');
+});
     // Pesanan
     Route::prefix('pesanan')->name('pesanan.')->group(function () {
         Route::get('/', [ClientPesananController::class, 'index'])->name('index');
+        Route::get('/search', [ClientPesananController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/create/{layanan}', [ClientPesananController::class, 'create'])->name('create');
         Route::post('/', [ClientPesananController::class, 'store'])->name('store');
         Route::get('/{pesanan}', [ClientPesananController::class, 'show'])->name('show');
@@ -213,6 +266,7 @@ Route::prefix('client')->middleware(['auth', 'client'])->name('client.')->group(
     // Invoice
     Route::prefix('invoice')->name('invoice.')->group(function () {
         Route::get('/', [ClientInvoiceController::class, 'index'])->name('index');
+        Route::get('/search', [ClientInvoiceController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/{invoice}', [ClientInvoiceController::class, 'show'])->name('show');
         Route::get('/{invoice}/download', [ClientInvoiceController::class, 'download'])->name('download');
     });
@@ -231,10 +285,22 @@ Route::prefix('client')->middleware(['auth', 'client'])->name('client.')->group(
     // Revisi
     Route::prefix('revisi')->name('revisi.')->group(function () {
         Route::get('/', [ClientRevisiController::class, 'index'])->name('index');
+        Route::get('/search', [ClientRevisiController::class, 'search'])->name('search'); // 🔍 SEARCH
         Route::get('/pesanan/{pesanan}/create', [ClientRevisiController::class, 'create'])->name('create');
         Route::post('/pesanan/{pesanan}', [ClientRevisiController::class, 'store'])->name('store');
         Route::get('/{revisi}', [ClientRevisiController::class, 'show'])->name('show');
         Route::get('/{revisi}/download/{index}', [ClientRevisiController::class, 'downloadFile'])->name('download-file');
+        
+        // ✅ Routes untuk file hasil revisi
+        Route::get('/{revisi}/file-hasil', [ClientRevisiController::class, 'getFileHasil'])->name('file-hasil');
+        Route::get('/{revisi}/download-hasil/{index}', [ClientRevisiController::class, 'downloadFileHasil'])->name('download-hasil');
+    });
+
+    // Notification Routes
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/badge-count', [ClientNotificationController::class, 'getBadgeCount'])->name('badge-count');
+        Route::post('/mark-as-read', [ClientNotificationController::class, 'markAsRead'])->name('mark-as-read');
+        Route::get('/payment-status/{invoice}', [ClientNotificationController::class, 'checkPaymentStatus'])->name('payment-status');
     });
 
     // Profil Client

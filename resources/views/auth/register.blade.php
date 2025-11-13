@@ -84,7 +84,7 @@
                         <div class="form-group">
                             <label for="foto" class="block text-gray-700 text-sm font-semibold mb-2">
                                 <i class="fas fa-camera text-primary-600 mr-1 text-xs"></i>
-                                Foto Profil <span class="text-gray-400 text-xs">(Opsional)</span>
+                                Foto Profil <span class="text-red-500">*</span>
                             </label>
                             <div class="input-wrapper">
                                 <input 
@@ -93,6 +93,7 @@
                                     id="foto" 
                                     accept="image/jpeg,image/jpg,image/png"
                                     class="w-full px-4 py-2 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 hover:border-primary-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 @error('foto') border-red-500 @enderror"
+                                    required
                                 >
                                 <div class="input-border"></div>
                             </div>
@@ -217,7 +218,7 @@
                         <div class="form-group">
                             <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">
                                 <i class="fas fa-envelope text-primary-600 mr-1 text-xs"></i>
-                                Email <span class="text-red-500">*</span>
+                                Alamat Email <span class="text-red-500">*</span>
                             </label>
                             <div class="input-wrapper">
                                 <input 
@@ -226,11 +227,17 @@
                                     id="email" 
                                     value="{{ old('email') }}"
                                     class="w-full px-4 py-2.5 text-sm border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-300 hover:border-primary-300 @error('email') border-red-500 @enderror" 
-                                    placeholder="Contoh: nama@email.com"
+                                    placeholder="Contoh: nama@gmail.com"
+                                    pattern="[a-z0-9._%+-]+@gmail\.com$"
+                                    title="Gunakan Gmail yang valid (contoh: nama@gmail.com)"
                                     required
                                 >
                                 <div class="input-border"></div>
                             </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Harus menggunakan alamat email seperti (@gmail.com)
+                            </p>
                             @error('email')
                             <p class="mt-1 text-xs text-red-500">{{ $message }}</p>
                             @enderror
@@ -312,54 +319,6 @@
                         </ul>
                     </div>
                 </div>
-                <!-- Terms & Conditions - Version 2 (More Attractive) -->
-<div class="animate-slideInLeft" style="animation-delay: 0.35s;">
-    <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
-        <div class="flex items-start space-x-3">
-            <div class="flex items-center h-5">
-                <input 
-                    type="checkbox" 
-                    name="terms" 
-                    id="terms" 
-                    class="w-5 h-5 rounded border-2 border-blue-300 text-primary-600 focus:ring-2 focus:ring-primary-500 cursor-pointer transition-all duration-300 hover:border-primary-500 @error('terms') border-red-500 @enderror"
-                    {{ old('terms') ? 'checked' : '' }}
-                    required
-                >
-            </div>
-            <div class="flex-1">
-                <label for="terms" class="text-sm text-gray-800 cursor-pointer select-none leading-relaxed">
-                    <span class="font-semibold text-gray-900">
-                        <i class="fas fa-shield-check text-primary-600 mr-1"></i>
-                        Persetujuan Pengguna
-                    </span>
-                    <br>
-                    Dengan mendaftar, saya menyetujui 
-                    <a href="#" onclick="event.preventDefault(); showTerms();" class="text-primary-600 hover:text-primary-700 font-semibold hover:underline">Syarat & Ketentuan</a> 
-                    dan 
-                    <a href="#" onclick="event.preventDefault(); showPrivacy();" class="text-primary-600 hover:text-primary-700 font-semibold hover:underline">Kebijakan Privasi</a> 
-                    Polargate. <span class="text-red-500 font-bold">*</span>
-                </label>
-            </div>
-        </div>
-        @error('terms')
-        <div class="mt-2 pl-8 text-xs text-red-600 flex items-center">
-            <i class="fas fa-exclamation-triangle mr-1"></i>
-            {{ $message }}
-        </div>
-        @enderror
-    </div>
-</div>
-
-<!-- JavaScript untuk Modal (Optional) -->
-<script>
-function showTerms() {
-    alert('Halaman Syarat & Ketentuan akan ditampilkan di sini.\n\nAnda bisa membuat modal atau redirect ke halaman terms.');
-}
-
-function showPrivacy() {
-    alert('Halaman Kebijakan Privasi akan ditampilkan di sini.\n\nAnda bisa membuat modal atau redirect ke halaman privacy policy.');
-}
-</script>
 
                 <!-- Submit Button -->
                 <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] animate-slideInLeft" style="animation-delay: 0.4s;">
@@ -442,6 +401,18 @@ document.getElementById('password_confirmation')?.addEventListener('input', func
         this.setCustomValidity('Password tidak cocok!');
     } else {
         this.setCustomValidity('');
+    }
+});
+
+// Gmail validation
+document.getElementById('email')?.addEventListener('input', function() {
+    const email = this.value.toLowerCase();
+    const emailInput = this;
+    
+    if (email && !email.endsWith('@gmail.com')) {
+        emailInput.setCustomValidity('Harap gunakan Gmail (@gmail.com)');
+    } else {
+        emailInput.setCustomValidity('');
     }
 });
 </script>

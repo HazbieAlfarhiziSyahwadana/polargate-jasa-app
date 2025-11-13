@@ -67,33 +67,58 @@
                     <i class="fas fa-image text-primary-600 mr-2"></i>Gambar Layanan
                 </label>
                 <div class="input-wrapper">
-                    <input type="file" name="gambar" id="gambar" accept="image/*" class="input-field @error('gambar') border-red-500 @enderror" onchange="previewImage(event)">
+                    <input type="file" name="gambar" id="gambar" accept="image/*" class="input-field @error('gambar') border-red-500 @enderror" onchange="previewImage(event, 'previewImage')">
                     <div class="input-border"></div>
                 </div>
                 @error('gambar')
                 <p class="text-red-500 text-xs mt-1 animate-shake">{{ $message }}</p>
                 @enderror
                 <p class="text-xs text-gray-500 mt-1">Max 2MB (jpg, jpeg, png)</p>
-                <img id="preview" class="mt-3 w-32 h-32 object-cover rounded-lg shadow-md hidden animate-fadeIn">
+                <img id="previewImage" class="mt-3 w-32 h-32 object-cover rounded-lg shadow-md hidden animate-fadeIn">
             </div>
 
-            <!-- Harga Mulai -->
+            <!-- Video URL -->
             <div class="form-group animate-slideInLeft" style="animation-delay: 0.5s;">
-                <label for="harga_mulai" class="block text-gray-700 text-sm font-medium mb-2">
-                    <i class="fas fa-money-bill-wave text-primary-600 mr-2"></i>Harga Mulai <span class="text-red-500">*</span>
+                <label for="video_url" class="block text-gray-700 text-sm font-medium mb-2">
+                    <i class="fas fa-video text-primary-600 mr-2"></i>URL Video (YouTube/Video)
                 </label>
                 <div class="input-wrapper">
-                    <input type="number" name="harga_mulai" id="harga_mulai" value="{{ old('harga_mulai') }}" class="input-field @error('harga_mulai') border-red-500 @enderror" placeholder="5000000" required>
+                    <input type="url" name="video_url" id="video_url" value="{{ old('video_url') }}" class="input-field @error('video_url') border-red-500 @enderror" placeholder="https://youtube.com/embed/... atau URL video">
                     <div class="input-border"></div>
                 </div>
-                @error('harga_mulai')
+                @error('video_url')
                 <p class="text-red-500 text-xs mt-1 animate-shake">{{ $message }}</p>
                 @enderror
+                <p class="text-xs text-gray-500 mt-1">Masukkan URL YouTube atau video</p>
+                
+                @if(old('video_url'))
+                <div class="mt-3">
+                    <div class="video-preview-container">
+                        <div class="video-container">
+                            <iframe src="{{ old('video_url') }}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
 
+        <!-- Harga Mulai -->
+        <div class="mt-4 form-group animate-slideInLeft" style="animation-delay: 0.6s;">
+            <label for="harga_mulai" class="block text-gray-700 text-sm font-medium mb-2">
+                <i class="fas fa-money-bill-wave text-primary-600 mr-2"></i>Harga Mulai <span class="text-red-500">*</span>
+            </label>
+            <div class="input-wrapper">
+                <input type="number" name="harga_mulai" id="harga_mulai" value="{{ old('harga_mulai') }}" class="input-field @error('harga_mulai') border-red-500 @enderror" placeholder="5000000" required>
+                <div class="input-border"></div>
+            </div>
+            @error('harga_mulai')
+            <p class="text-red-500 text-xs mt-1 animate-shake">{{ $message }}</p>
+            @enderror
+        </div>
+
         <!-- Status Aktif -->
-        <div class="mt-4 animate-slideInLeft" style="animation-delay: 0.6s;">
+        <div class="mt-4 animate-slideInLeft" style="animation-delay: 0.7s;">
             <label class="flex items-center cursor-pointer group">
                 <input type="checkbox" name="is_active" value="1" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 transition-all duration-300" {{ old('is_active', true) ? 'checked' : '' }}>
                 <span class="ml-2 text-sm text-gray-700 group-hover:text-primary-600 transition-colors duration-300">
@@ -103,7 +128,7 @@
         </div>
 
         <!-- Buttons -->
-        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 animate-fadeIn" style="animation-delay: 0.7s;">
+        <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 animate-fadeIn" style="animation-delay: 0.8s;">
             <a href="{{ route('admin.layanan.index') }}" class="btn-secondary hover:scale-105 transition-transform duration-300 text-center">
                 <i class="fas fa-times mr-2"></i>Batal
             </a>
@@ -114,10 +139,36 @@
     </form>
 </div>
 
+@push('styles')
+<style>
+.video-preview-container {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.video-container {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    height: 0;
+    overflow: hidden;
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+</style>
+@endpush
+
 @push('scripts')
 <script>
-function previewImage(event) {
-    const preview = document.getElementById('preview');
+function previewImage(event, previewId) {
+    const preview = document.getElementById(previewId);
     const file = event.target.files[0];
     
     if (file) {
@@ -130,8 +181,33 @@ function previewImage(event) {
     }
 }
 
+// Preview video when URL is entered
+document.getElementById('video_url').addEventListener('input', function(e) {
+    const url = e.target.value;
+    const previewContainer = this.parentElement.parentElement.querySelector('.video-preview-container');
+    
+    if (url) {
+        if (!previewContainer) {
+            const container = document.createElement('div');
+            container.className = 'mt-3';
+            container.innerHTML = `
+                <div class="video-preview-container">
+                    <div class="video-container">
+                        <iframe src="${url}" frameborder="0" allowfullscreen></iframe>
+                    </div>
+                </div>
+            `;
+            this.parentElement.parentElement.appendChild(container);
+        } else {
+            previewContainer.querySelector('iframe').src = url;
+        }
+    } else if (previewContainer) {
+        previewContainer.remove();
+    }
+});
+
 // Add focus effect to inputs
-document.querySelectorAll('input[type="text"], input[type="number"], input[type="file"], select, textarea').forEach(input => {
+document.querySelectorAll('input[type="text"], input[type="number"], input[type="file"], input[type="url"], select, textarea').forEach(input => {
     input.addEventListener('focus', function() {
         this.closest('.input-wrapper')?.classList.add('input-focused');
     });

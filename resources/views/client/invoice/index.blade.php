@@ -20,7 +20,6 @@
         }
     }
 
-    /* Animasi hanya untuk first load */
     .page-load .animate-fade {
         animation: fadeIn 0.4s ease-out;
     }
@@ -101,9 +100,10 @@
             <select id="statusFilter" 
                     class="filter-input w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition">
                 <option value="">Semua Status</option>
-                <option value="belum dibayar">Belum Dibayar</option>
+                <option value="belum lunas">Belum Lunas</option>
                 <option value="menunggu verifikasi">Menunggu Verifikasi</option>
                 <option value="ditolak">Ditolak</option>
+                <option value="dibatalkan">Dibatalkan</option>
                 <option value="lunas">Lunas</option>
             </select>
         </div>
@@ -128,18 +128,31 @@
 @if($invoices->count() > 0)
 <div class="space-y-4" id="invoiceContainer">
     @foreach($invoices as $index => $invoice)
+    @php
+        // Jika pesanan dibatalkan, maka status invoice otomatis dibatalkan
+        $statusInvoice = $invoice->status;
+        $statusClass = 'badge-warning';
+        
+        if($invoice->pesanan->status == 'Dibatalkan') {
+            $statusInvoice = 'Dibatalkan';
+            $statusClass = 'badge-secondary';
+        } elseif($invoice->status == 'Lunas') {
+            $statusClass = 'badge-success';
+        } elseif($invoice->status == 'Menunggu Verifikasi') {
+            $statusClass = 'badge-info';
+        } elseif($invoice->status == 'Ditolak') {
+            $statusClass = 'badge-danger';
+        } elseif($invoice->status == 'Dibatalkan') {
+            $statusClass = 'badge-secondary';
+        }
+    @endphp
+
     <div class="card invoice-card animate-slide delay-{{ min($index * 100 + 200, 500) }}"
          data-nomor="{{ strtolower($invoice->nomor_invoice) }}"
          data-kode="{{ strtolower($invoice->pesanan->kode_pesanan) }}"
          data-layanan="{{ strtolower($invoice->pesanan->layanan->nama_layanan ?? $invoice->pesanan->layanan->nama) }}"
-         data-status="{{ strtolower($invoice->status) }}">
-        @php
-            $statusClass = 'badge-warning';
-            if($invoice->status == 'Lunas') $statusClass = 'badge-success';
-            if($invoice->status == 'Menunggu Verifikasi') $statusClass = 'badge-info';
-            if($invoice->status == 'Ditolak') $statusClass = 'badge-danger';
-        @endphp
-
+         data-status="{{ strtolower($statusInvoice) }}">
+        
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 pb-4 border-b border-gray-200">
             <div>
                 <div class="flex items-center gap-3 mb-1">
@@ -155,7 +168,7 @@
                     {{ $invoice->created_at->format('d M Y H:i') }}
                 </p>
             </div>
-            <span class="{{ $statusClass }}">{{ $invoice->status }}</span>
+            <span class="{{ $statusClass }}">{{ $statusInvoice }}</span>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -189,7 +202,8 @@
             </div>
         </div>
 
-        <!-- Jatuh Tempo -->
+        <!-- Jatuh Tempo - Hanya tampil jika status bukan Dibatalkan -->
+        @if($statusInvoice != 'Dibatalkan')
         <div class="bg-{{ $invoice->is_jatuh_tempo ? 'red' : 'gray' }}-50 p-3 rounded-lg mb-4">
             <p class="text-sm {{ $invoice->is_jatuh_tempo ? 'text-red-700' : 'text-gray-700' }} flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,6 +217,44 @@
                 {{ $invoice->tanggal_jatuh_tempo->format('d M Y') }}
             </p>
         </div>
+        @endif
+
+        <!-- Status Pesanan Dibatalkan -->
+        @if($invoice->pesanan->status == 'Dibatalkan')
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r-lg">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-red-800 mb-1">Pesanan Dibatalkan</h4>
+                    <p class="text-sm text-red-700">
+                        <span class="font-medium">Alasan:</span> {{ $invoice->pesanan->alasan_pembatalan ?? 'Pesanan telah dibatalkan oleh client' }}
+                    </p>
+                    <p class="text-xs text-red-600 mt-1">
+                        Status invoice otomatis berubah menjadi Dibatalkan
+                    </p>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        <!-- Pesan Pembatalan Invoice -->
+        @if($invoice->status == 'Dibatalkan' && $invoice->pesanan->status != 'Dibatalkan')
+        <div class="bg-gray-50 border-l-4 border-gray-500 p-4 mb-4 rounded-r-lg">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                <div class="flex-1">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-1">Invoice Dibatalkan</h4>
+                    <p class="text-sm text-gray-700">
+                        <span class="font-medium">Alasan:</span> {{ $invoice->alasan_penolakan ?? 'Invoice dibatalkan karena melewati batas jatuh tempo' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <!-- Pesan Penolakan Pembayaran -->
         @if($invoice->status == 'Ditolak' && $invoice->alasan_penolakan)
@@ -230,21 +282,35 @@
                 Download PDF
             </a>
             
-            @if($invoice->status == 'Belum Dibayar' || $invoice->status == 'Ditolak')
+            @if($statusInvoice == 'Belum Lunas' && $invoice->pesanan->status != 'Dibatalkan')
                 <a href="{{ route('client.pembayaran.invoice', $invoice) }}" class="btn-primary text-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
-                    {{ $invoice->status == 'Ditolak' ? 'Bayar Ulang' : 'Bayar Sekarang' }}
+                    Bayar Sekarang
                 </a>
-            @elseif($invoice->status == 'Menunggu Verifikasi')
+            @elseif($statusInvoice == 'Ditolak' && $invoice->pesanan->status != 'Dibatalkan')
+                <a href="{{ route('client.pembayaran.invoice', $invoice) }}" class="btn-primary text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Bayar Ulang
+                </a>
+            @elseif($statusInvoice == 'Dibatalkan' || $invoice->pesanan->status == 'Dibatalkan')
+                <a href="{{ route('client.layanan.show', $invoice->pesanan->layanan_id) }}" class="btn-success text-sm flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    Pesan Lagi
+                </a>
+            @elseif($statusInvoice == 'Menunggu Verifikasi')
                 <span class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-medium text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                     Menunggu Verifikasi
                 </span>
-            @elseif($invoice->status == 'Lunas')
+            @elseif($statusInvoice == 'Lunas')
                 <span class="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg font-medium text-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>

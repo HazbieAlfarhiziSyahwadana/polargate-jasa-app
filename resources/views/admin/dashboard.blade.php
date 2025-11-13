@@ -20,7 +20,6 @@
         }
     }
 
-    /* Animasi hanya untuk first load */
     .page-load .animate-fade {
         animation: fadeIn 0.4s ease-out;
     }
@@ -63,6 +62,18 @@
         transform: translateX(4px);
     }
 
+    .progress-bar {
+        transition: width 0.8s ease-in-out;
+    }
+
+    .trend-up {
+        color: #10b981;
+    }
+
+    .trend-down {
+        color: #ef4444;
+    }
+
     @media (max-width: 768px) {
         .overflow-x-auto {
             -webkit-overflow-scrolling: touch;
@@ -72,17 +83,18 @@
 
 <div class="mb-6 animate-fade">
     <h1 class="text-3xl font-bold text-gray-800">Dashboard</h1>
-    <p class="text-gray-600">Selamat datang, {{ Auth::user()->name }}!</p>
+    <p class="text-gray-600">Selamat datang, {{ Auth::user()->name }}! - Ringkasan lengkap bisnis Anda</p>
 </div>
 
-<!-- Stats Cards -->
+<!-- Stats Cards Utama -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6">
     <!-- Total Pesanan -->
-    <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white stats-card animate-slide cursor-pointer">
+    <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white stats-card animate-slide">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-blue-100 text-sm font-medium">Total Pesanan</p>
                 <p class="text-3xl font-bold mt-2">{{ $total_pesanan }}</p>
+                <p class="text-blue-100 text-xs mt-1">Semua waktu</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,11 +105,12 @@
     </div>
 
     <!-- Total Client -->
-    <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white stats-card animate-slide delay-100 cursor-pointer">
+    <div class="card bg-gradient-to-br from-green-500 to-green-600 text-white stats-card animate-slide delay-100">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-green-100 text-sm font-medium">Total Client</p>
                 <p class="text-3xl font-bold mt-2">{{ $total_client }}</p>
+                <p class="text-green-100 text-xs mt-1">Client terdaftar</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,11 +121,12 @@
     </div>
 
     <!-- Pesanan Aktif -->
-    <div class="card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white stats-card animate-slide delay-200 cursor-pointer">
+    <div class="card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white stats-card animate-slide delay-200">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-yellow-100 text-sm font-medium">Pesanan Aktif</p>
                 <p class="text-3xl font-bold mt-2">{{ $pesanan_aktif }}</p>
+                <p class="text-yellow-100 text-xs mt-1">Dalam proses</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,11 +137,12 @@
     </div>
 
     <!-- Pendapatan Total -->
-    <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white stats-card animate-slide delay-300 cursor-pointer">
+    <div class="card bg-gradient-to-br from-purple-500 to-purple-600 text-white stats-card animate-slide delay-300">
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-purple-100 text-sm font-medium">Pendapatan Total</p>
                 <p class="text-2xl md:text-3xl font-bold mt-2">Rp {{ number_format($pendapatan_total, 0, ',', '.') }}</p>
+                <p class="text-purple-100 text-xs mt-1">Dari invoice lunas</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,6 +153,99 @@
     </div>
 </div>
 
+<!-- Statistik Keuangan -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mb-6">
+    <!-- Pendapatan Bulan Ini -->
+    <div class="card animate-slide delay-100">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-800">Pendapatan Bulan Ini</h2>
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+            </div>
+        </div>
+        <div class="text-center">
+            <p class="text-3xl font-bold text-gray-800 mb-2">Rp {{ number_format($pendapatan_bulan_ini, 0, ',', '.') }}</p>
+            <div class="flex items-center justify-center gap-2">
+                @if($persentase_pertumbuhan >= 0)
+                <svg class="w-4 h-4 trend-up" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                </svg>
+                <span class="text-sm trend-up">+{{ number_format($persentase_pertumbuhan, 1) }}%</span>
+                @else
+                <svg class="w-4 h-4 trend-down" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                </svg>
+                <span class="text-sm trend-down">{{ number_format($persentase_pertumbuhan, 1) }}%</span>
+                @endif
+                <span class="text-sm text-gray-500">vs bulan lalu</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistik DP -->
+    <div class="card animate-slide delay-200">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-800">DP</h2>
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+                <span>Total DP:</span>
+                <span class="font-semibold">{{ $invoice_stats['dp']['total'] }} invoice</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>Lunas:</span>
+                <span class="font-semibold text-green-600">{{ $invoice_stats['dp']['lunas'] }} invoice</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>Pending:</span>
+                <span class="font-semibold text-yellow-600">{{ $invoice_stats['dp']['pending'] }} invoice</span>
+            </div>
+            <div class="flex justify-between text-sm font-bold">
+                <span>Total Nilai:</span>
+                <span>Rp {{ number_format($invoice_stats['dp']['total_amount'], 0, ',', '.') }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistik Pelunasan -->
+    <div class="card animate-slide delay-300">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-800">Pelunasan</h2>
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="space-y-2">
+            <div class="flex justify-between text-sm">
+                <span>Total Pelunasan:</span>
+                <span class="font-semibold">{{ $invoice_stats['pelunasan']['total'] }} invoice</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>Lunas:</span>
+                <span class="font-semibold text-green-600">{{ $invoice_stats['pelunasan']['lunas'] }} invoice</span>
+            </div>
+            <div class="flex justify-between text-sm">
+                <span>Pending:</span>
+                <span class="font-semibold text-yellow-600">{{ $invoice_stats['pelunasan']['pending'] }} invoice</span>
+            </div>
+            <div class="flex justify-between text-sm font-bold">
+                <span>Total Nilai:</span>
+                <span>Rp {{ number_format($invoice_stats['pelunasan']['total_amount'], 0, ',', '.') }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grid Bawah -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
     <!-- Pesanan Terbaru -->
     <div class="card animate-slide delay-100">
@@ -176,27 +284,43 @@
         </a>
     </div>
 
-    <!-- Pembayaran Pending -->
+    <!-- Invoice Pending (DP & Pelunasan yang belum dibayar + Menunggu Verifikasi) -->
     <div class="card animate-slide delay-200">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold text-gray-800">Pembayaran Menunggu Verifikasi</h2>
-            <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <h2 class="text-xl font-bold text-gray-800">Invoice Perlu Perhatian</h2>
+            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
             </div>
         </div>
         <div class="space-y-3">
-            @forelse($pembayaran_pending as $pembayaran)
+            @forelse($invoice_pending as $invoice)
             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg item-row">
                 <div class="flex-1">
-                    <p class="font-semibold text-gray-800">{{ $pembayaran->invoice->nomor_invoice }}</p>
-                    <p class="text-sm text-gray-600">{{ $pembayaran->invoice->pesanan->client->name }}</p>
-                    <p class="text-sm font-medium text-gray-800">Rp {{ number_format($pembayaran->jumlah_dibayar, 0, ',', '.') }}</p>
+                    <p class="font-semibold text-gray-800">{{ $invoice->nomor_invoice }}</p>
+                    <p class="text-sm text-gray-600">{{ $invoice->pesanan->client->name ?? 'N/A' }}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="badge-{{ $invoice->tipe == 'DP' ? 'warning' : 'info' }} text-xs">
+                            {{ $invoice->tipe }}
+                        </span>
+                        <span class="text-sm font-medium text-gray-800">
+                            Rp {{ number_format($invoice->jumlah, 0, ',', '.') }}
+                        </span>
+                    </div>
                 </div>
                 <div class="text-right">
-                    <span class="badge-warning text-xs">Pending</span>
-                    <p class="text-xs text-gray-500 mt-1">{{ $pembayaran->created_at->diffForHumans() }}</p>
+                    @php
+                        $hasPendingPayment = $invoice->pembayaran && $invoice->pembayaran->where('status', 'Menunggu Verifikasi')->count() > 0;
+                    @endphp
+                    
+                    @if($hasPendingPayment)
+                        <span class="badge-warning text-xs">Menunggu Verifikasi</span>
+                        <p class="text-xs text-gray-500 mt-1">Bukti sudah diupload</p>
+                    @else
+                        <span class="badge-danger text-xs">Belum Dibayar</span>
+                        <p class="text-xs text-gray-500 mt-1">{{ $invoice->created_at->diffForHumans() }}</p>
+                    @endif
                 </div>
             </div>
             @empty
@@ -204,70 +328,117 @@
                 <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                <p class="text-gray-500">Tidak ada pembayaran pending</p>
+                <p class="text-gray-500">Semua invoice sudah dibayar! 🎉</p>
             </div>
             @endforelse
         </div>
-        <a href="{{ route('admin.pembayaran.pending') }}" class="block text-center text-primary-600 hover:text-primary-700 font-medium mt-4 transition-colors">
-            Lihat Semua Pembayaran →
-        </a>
+        <div class="flex gap-2 mt-4">
+            <a href="{{ route('admin.invoice.index') }}?status=Belum+Dibayar" class="flex-1 text-center text-primary-600 hover:text-primary-700 font-medium transition-colors">
+                Lihat Invoice Pending →
+            </a>
+            <a href="{{ route('admin.pembayaran.pending') }}" class="flex-1 text-center text-orange-600 hover:text-orange-700 font-medium transition-colors">
+                Verifikasi Pembayaran →
+            </a>
+        </div>
     </div>
 </div>
 
-<!-- Layanan Populer -->
-<div class="card mt-6 animate-slide delay-300">
-    <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold text-gray-800">Layanan Paling Populer</h2>
-        <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-            </svg>
+<!-- Grid Kedua -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mt-6">
+    <!-- Layanan Populer -->
+    <div class="card animate-slide delay-300">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Layanan Paling Populer</h2>
+            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                </svg>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Layanan</th>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Pesanan</th>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Mulai</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($layanan_populer as $layanan)
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">{{ $layanan->nama_layanan }}</div>
+                        </td>
+                        <td class="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <span class="badge-info">{{ $layanan->kategori }}</span>
+                        </td>
+                        <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ $layanan->pesanan_count }} pesanan
+                        </td>
+                        <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                            Rp {{ number_format($layanan->harga_mulai, 0, ',', '.') }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-8 text-center">
+                            <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                            </svg>
+                            <p class="text-gray-500">Belum ada data</p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Layanan</th>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Pesanan</th>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Mulai</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($layanan_populer as $layanan)
-                <tr class="hover:bg-gray-50 transition-colors duration-200">
-                    <td class="px-4 md:px-6 py-4 whitespace-nowrap">
-                        <div class="font-medium text-gray-900">{{ $layanan->nama_layanan }}</div>
-                    </td>
-                    <td class="px-4 md:px-6 py-4 whitespace-nowrap">
-                        <span class="badge-info">{{ $layanan->kategori }}</span>
-                    </td>
-                    <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {{ $layanan->pesanan_count }} pesanan
-                    </td>
-                    <td class="px-4 md:px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
-                        Rp {{ number_format($layanan->harga_mulai, 0, ',', '.') }}
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" class="px-6 py-8 text-center">
-                        <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                        </svg>
-                        <p class="text-gray-500">Belum ada data</p>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+
+    <!-- Top Clients -->
+    <div class="card animate-slide delay-400">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-800">Top Clients</h2>
+            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="space-y-3">
+            @forelse($top_clients as $client)
+            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg item-row">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                        <span class="text-primary-600 font-semibold text-sm">
+                            {{ strtoupper(substr($client->name, 0, 1)) }}
+                        </span>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-800">{{ $client->name }}</p>
+                        <p class="text-sm text-gray-600">{{ $client->email }}</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm font-semibold text-gray-800">Rp {{ number_format($client->total_pembelian, 0, ',', '.') }}</p>
+                    <p class="text-xs text-gray-500">{{ $client->pesanan_count }} pesanan</p>
+                </div>
+            </div>
+            @empty
+            <div class="text-center py-8">
+                <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <p class="text-gray-500">Belum ada data client</p>
+            </div>
+            @endforelse
+        </div>
     </div>
 </div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Cek apakah ini first load
         const isFirstLoad = !sessionStorage.getItem('dashboard_loaded');
         
         if (isFirstLoad) {
@@ -280,7 +451,6 @@
         }
     });
 
-    // Reset flag saat navigasi ke halaman lain
     window.addEventListener('beforeunload', function(e) {
         if (e.target.activeElement.tagName === 'A' && 
             e.target.activeElement.getAttribute('href') !== '#') {

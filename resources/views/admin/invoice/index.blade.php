@@ -59,6 +59,16 @@
         background-color: #f9fafb;
     }
 
+    /* ✅ Row dibatalkan */
+    table tbody tr.cancelled-row {
+        opacity: 0.6;
+        background-color: #f9fafb;
+    }
+
+    table tbody tr.cancelled-row:hover {
+        background-color: #f3f4f6;
+    }
+
     .search-input {
         transition: all 0.3s ease;
     }
@@ -89,7 +99,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-blue-100 text-sm font-medium mb-1">Total Invoice</p>
-                <p class="text-3xl font-bold">{{ $invoices->count() }}</p>
+                <p class="text-3xl font-bold">{{ $stats['total'] }}</p>
             </div>
             <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +113,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-green-100 text-sm font-medium mb-1">Lunas</p>
-                <p class="text-3xl font-bold">{{ $invoices->where('status', 'Lunas')->count() }}</p>
+                <p class="text-3xl font-bold">{{ $stats['lunas'] }}</p>
             </div>
             <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +127,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-yellow-100 text-sm font-medium mb-1">Menunggu Verifikasi</p>
-                <p class="text-3xl font-bold">{{ $invoices->where('status', 'Menunggu Verifikasi')->count() }}</p>
+                <p class="text-3xl font-bold">{{ $stats['menunggu_verifikasi'] }}</p>
             </div>
             <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +141,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <p class="text-red-100 text-sm font-medium mb-1">Belum Dibayar</p>
-                <p class="text-3xl font-bold">{{ $invoices->where('status', 'Belum Dibayar')->count() }}</p>
+                <p class="text-3xl font-bold">{{ $stats['belum_dibayar'] }}</p>
             </div>
             <div class="bg-white/20 p-4 rounded-xl backdrop-blur-sm">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,6 +195,7 @@
                     <option value="Belum Dibayar">Belum Dibayar</option>
                     <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
                     <option value="Lunas">Lunas</option>
+                    <option value="Dibatalkan">Dibatalkan</option>
                 </select>
             </div>
         </div>
@@ -201,7 +212,7 @@
 
         <!-- Search Results Info -->
         <div id="searchInfo" class="text-sm text-gray-600 hidden">
-            Menampilkan <span id="resultCount" class="font-semibold text-primary-600"></span> hasil dari <span id="totalCount" class="font-semibold">{{ $invoices->count() }}</span> invoice
+            Menampilkan <span id="resultCount" class="font-semibold text-primary-600"></span> hasil dari <span id="totalCount" class="font-semibold">{{ $stats['total'] }}</span> invoice
         </div>
     </div>
 </div>
@@ -224,13 +235,27 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($invoices as $invoice)
-                <tr class="invoice-row"
+                @php
+                    // 🔥 LOGIKA BARU: Status invoice mengikuti status pesanan
+                    // Jika pesanan dibatalkan, maka invoice otomatis dibatalkan
+                    if ($invoice->pesanan->status === 'Dibatalkan') {
+                        $displayStatus = 'Dibatalkan';
+                    } else {
+                        // Jika pesanan tidak dibatalkan, gunakan logika normal
+                        $hasPendingPayment = $invoice->pembayaran && $invoice->pembayaran->where('status', 'Menunggu Verifikasi')->count() > 0;
+                        $displayStatus = $hasPendingPayment ? 'Menunggu Verifikasi' : $invoice->status;
+                    }
+                    
+                    // ✅ Class untuk row yang dibatalkan
+                    $rowClass = $displayStatus === 'Dibatalkan' ? 'cancelled-row' : '';
+                @endphp
+                <tr class="invoice-row {{ $rowClass }}"
                     data-nomor="{{ strtolower($invoice->nomor_invoice) }}"
                     data-client="{{ strtolower($invoice->pesanan->client->name) }}"
                     data-email="{{ strtolower($invoice->pesanan->client->email) }}"
                     data-pesanan="{{ strtolower($invoice->pesanan->kode_pesanan) }}"
                     data-tipe="{{ $invoice->tipe }}"
-                    data-status="{{ $invoice->status }}">
+                    data-status="{{ $displayStatus }}">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="font-medium text-gray-900">{{ $invoice->nomor_invoice }}</div>
                     </td>
@@ -240,9 +265,17 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {{ $invoice->pesanan->kode_pesanan }}
+                        @if($invoice->pesanan->status === 'Dibatalkan')
+                        <div class="text-xs text-red-600 mt-1">
+                            <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Pesanan Dibatalkan
+                        </div>
+                        @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="badge-info text-xs">{{ $invoice->tipe }}</span>
+                        <span class="badge-{{ $invoice->tipe == 'DP' ? 'warning' : 'info' }} text-xs">{{ $invoice->tipe }}</span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                         <div class="flex items-center gap-1">
@@ -253,15 +286,20 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        @if($invoice->status == 'Lunas')
+                        @if($displayStatus == 'Lunas')
                         <span class="badge-success inline-flex items-center gap-1">
                             <span class="w-2 h-2 bg-green-400 rounded-full"></span>
                             Lunas
                         </span>
-                        @elseif($invoice->status == 'Menunggu Verifikasi')
+                        @elseif($displayStatus == 'Menunggu Verifikasi')
                         <span class="badge-warning inline-flex items-center gap-1">
                             <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
                             Menunggu Verifikasi
+                        </span>
+                        @elseif($displayStatus == 'Dibatalkan')
+                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <span class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                            Dibatalkan
                         </span>
                         @else
                         <span class="badge-danger inline-flex items-center gap-1">
@@ -277,7 +315,7 @@
                             </svg>
                             {{ $invoice->tanggal_jatuh_tempo->format('d/m/Y') }}
                         </div>
-                        @if($invoice->is_jatuh_tempo)
+                        @if($invoice->is_jatuh_tempo && $displayStatus != 'Lunas' && $displayStatus != 'Dibatalkan')
                         <span class="text-red-600 text-xs flex items-center gap-1 mt-1 jatuh-tempo-badge">
                             <span class="w-2 h-2 bg-red-500 rounded-full"></span>
                             Jatuh Tempo
@@ -287,6 +325,9 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex items-center gap-2">
                             <a href="{{ route('admin.invoice.show', $invoice) }}" class="text-blue-600 hover:text-blue-900 transition-colors">Detail</a>
+                            @if($displayStatus == 'Menunggu Verifikasi')
+                            <a href="{{ route('admin.pembayaran.pending') }}" class="text-orange-600 hover:text-orange-900 transition-colors">Verifikasi</a>
+                            @endif
                             <a href="{{ route('admin.invoice.download', $invoice) }}" class="text-green-600 hover:text-green-900 transition-colors">Download</a>
                         </div>
                     </td>

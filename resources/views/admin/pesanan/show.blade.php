@@ -83,6 +83,20 @@
         transition: width 1s ease-out;
     }
 
+    .link-preview-card {
+        transition: all 0.3s ease;
+        border: 2px solid #e5e7eb;
+    }
+
+    .link-preview-card:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
+
+    .copy-btn:hover {
+        background-color: #f3f4f6;
+    }
+
     @media (max-width: 1024px) {
         .grid-cols-1.lg\\:grid-cols-3 {
             grid-template-columns: 1fr;
@@ -235,7 +249,6 @@
                 <div>
                     <p class="text-sm text-gray-500 mb-2">Detail Pesanan dari Client</p>
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        {{-- FIX: Gunakan detail_pesanan bukan brief --}}
                         <p class="text-gray-700 whitespace-pre-line text-sm">{{ $pesanan->detail_pesanan ?? 'Tidak ada brief' }}</p>
                     </div>
                 </div>
@@ -409,7 +422,7 @@
             @endif
         @endif
 
-        <!-- Revisi -->
+        <!-- Revisi dengan Link Preview -->
         @if($pesanan->revisi->count() > 0)
         <div class="card animate-slide delay-500">
             <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Riwayat Revisi</h2>
@@ -418,19 +431,79 @@
                 @foreach($pesanan->revisi as $revisi)
                 <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
-                        <p class="font-semibold text-gray-800">Revisi ke-{{ $revisi->revisi_ke }}</p>
+                        <div class="flex items-center gap-2">
+                            <p class="font-semibold text-gray-800">Revisi ke-{{ $revisi->revisi_ke }}</p>
+                            @if($revisi->hasLinkPreview())
+                            <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                                </svg>
+                                Link Preview
+                            </span>
+                            @endif
+                        </div>
                         <span class="{{ $revisi->status_badge }} text-xs">{{ $revisi->status }}</span>
                     </div>
+                    
                     <p class="text-sm text-gray-700 mb-2">{{ $revisi->catatan_revisi }}</p>
-                    @if($revisi->hasFiles())
-                    <div class="mt-2">
-                        <p class="text-xs text-gray-500 mb-1">File Referensi ({{ $revisi->file_count }}):</p>
-                        @foreach($revisi->file_referensi as $file)
-                        <a href="{{ asset('storage/' . $file) }}" target="_blank" class="text-xs text-blue-600 hover:underline block truncate">{{ basename($file) }}</a>
-                        @endforeach
+                    
+                    {{-- Link Preview Hasil Revisi --}}
+                    @if($revisi->hasLinkPreview())
+                    <div class="mt-3 p-3 bg-white rounded-lg border border-green-200">
+                        <div class="flex items-start gap-2 mb-2">
+                            <svg class="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="flex-1">
+                                <p class="text-xs font-medium text-gray-700 mb-1">Link Preview Hasil Revisi:</p>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ $revisi->catatan_admin }}" 
+                                       target="_blank" 
+                                       class="text-blue-600 hover:text-blue-800 text-sm truncate flex-1">
+                                        {{ $revisi->catatan_admin }}
+                                    </a>
+                                    <button onclick="copyRevisionLink('{{ $revisi->catatan_admin }}', {{ $revisi->id }})" 
+                                            class="copy-btn p-1.5 rounded hover:bg-gray-100 transition flex-shrink-0"
+                                            title="Copy link"
+                                            id="copyBtnRevisi{{ $revisi->id }}">
+                                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                
+                                {{-- Catatan Hasil --}}
+                                @if($revisi->getCatatanHasil())
+                                <div class="mt-2 p-2 bg-blue-50 rounded text-xs text-gray-700">
+                                    <span class="font-medium">Catatan:</span> {{ $revisi->getCatatanHasil() }}
+                                </div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                     @endif
-                    <p class="text-xs text-gray-500 mt-2">{{ $revisi->formatted_created_at }}</p>
+                    
+                    {{-- File Referensi dari Client --}}
+                    @if($revisi->hasFiles())
+                    <div class="mt-2">
+                        <p class="text-xs text-gray-500 mb-1">File Referensi dari Client ({{ $revisi->file_count }}):</p>
+                        <div class="space-y-1">
+                            @foreach($revisi->file_referensi as $file)
+                            <a href="{{ asset('storage/' . $file) }}" target="_blank" class="text-xs text-blue-600 hover:underline block truncate">{{ basename($file) }}</a>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+                    
+                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-yellow-300">
+                        <p class="text-xs text-gray-500">{{ $revisi->formatted_created_at }}</p>
+                        <a href="{{ route('admin.revisi.show', $revisi) }}" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Detail Revisi
+                        </a>
+                    </div>
                 </div>
                 @endforeach
             </div>
@@ -470,69 +543,77 @@
             <a href="{{ route('admin.client.show', $pesanan->client) }}" class="btn-secondary w-full mt-4 text-center block">Lihat Profil Client</a>
         </div>
 
-        <!-- Invoice -->
-        <div class="card animate-slide delay-200">
-            <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Invoice & Pembayaran</h2>
-            
-            @php
-                $invoiceDP = $pesanan->invoices->where('tipe', 'DP')->first();
-                $invoicePelunasan = $pesanan->invoices->where('tipe', 'Pelunasan')->first();
-            @endphp
+       <!-- Invoice -->
+<div class="card animate-slide delay-200">
+    <h2 class="text-lg sm:text-xl font-bold text-gray-800 mb-4">Invoice & Pembayaran</h2>
+    
+    @php
+        $invoiceDP = $pesanan->invoices->where('tipe', 'DP')->first();
+        $invoicePelunasan = $pesanan->invoices->where('tipe', 'Pelunasan')->first();
+    @endphp
 
-            <!-- Invoice DP -->
-            <div class="mb-4">
-                <p class="text-sm font-medium text-gray-700 mb-2">Invoice DP (50%)</p>
-                @if($invoiceDP)
-                <div class="bg-gray-50 p-3 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs text-gray-600 truncate">{{ $invoiceDP->nomor_invoice }}</span>
-                        @if($invoiceDP->status == 'Lunas')
-                        <span class="badge-success text-xs">Lunas</span>
-                        @elseif($invoiceDP->status == 'Menunggu Verifikasi')
-                        <span class="badge-warning text-xs">Pending</span>
-                        @else
-                        <span class="badge-danger text-xs">Belum Dibayar</span>
-                        @endif
-                    </div>
-                    <p class="font-semibold text-gray-900">Rp {{ number_format($invoiceDP->jumlah, 0, ',', '.') }}</p>
-                    <a href="{{ route('admin.invoice.show', $invoiceDP) }}" class="text-xs text-blue-600 hover:underline">Lihat Invoice</a>
-                </div>
+    <!-- Invoice DP -->
+    <div class="mb-4">
+        <p class="text-sm font-medium text-gray-700 mb-2">Invoice DP (50%)</p>
+        @if($invoiceDP)
+        <div class="bg-gray-50 p-3 rounded-lg">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs text-gray-600 truncate">{{ $invoiceDP->nomor_invoice }}</span>
+                @if($invoiceDP->status == 'Lunas')
+                <span class="badge-success text-xs">Lunas</span>
+                @elseif($invoiceDP->status == 'Menunggu Verifikasi')
+                <span class="badge-warning text-xs">Pending</span>
+                @elseif($invoiceDP->status == 'Dibatalkan')
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                    Dibatalkan
+                </span>
                 @else
-                <form action="{{ route('admin.invoice.create-dp', $pesanan) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-primary w-full text-sm">Terbitkan Invoice DP</button>
-                </form>
+                <span class="badge-danger text-xs">Belum Dibayar</span>
                 @endif
             </div>
-
-            <!-- Invoice Pelunasan -->
-            <div>
-                <p class="text-sm font-medium text-gray-700 mb-2">Invoice Pelunasan (50%)</p>
-                @if($invoicePelunasan)
-                <div class="bg-gray-50 p-3 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-xs text-gray-600 truncate">{{ $invoicePelunasan->nomor_invoice }}</span>
-                        @if($invoicePelunasan->status == 'Lunas')
-                        <span class="badge-success text-xs">Lunas</span>
-                        @elseif($invoicePelunasan->status == 'Menunggu Verifikasi')
-                        <span class="badge-warning text-xs">Pending</span>
-                        @else
-                        <span class="badge-danger text-xs">Belum Dibayar</span>
-                        @endif
-                    </div>
-                    <p class="font-semibold text-gray-900">Rp {{ number_format($invoicePelunasan->jumlah, 0, ',', '.') }}</p>
-                    <a href="{{ route('admin.invoice.show', $invoicePelunasan) }}" class="text-xs text-blue-600 hover:underline">Lihat Invoice</a>
-                </div>
-                @elseif($invoiceDP && $invoiceDP->status == 'Lunas' && in_array($pesanan->status, ['Preview Siap', 'Menunggu Pelunasan']))
-                <form action="{{ route('admin.invoice.create-pelunasan', $pesanan) }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-primary w-full text-sm">Terbitkan Invoice Pelunasan</button>
-                </form>
-                @else
-                <p class="text-xs text-gray-500 text-center py-2 bg-gray-50 rounded-lg">DP harus lunas terlebih dahulu</p>
-                @endif
-            </div>
+            <p class="font-semibold text-gray-900">Rp {{ number_format($invoiceDP->jumlah, 0, ',', '.') }}</p>
+            <a href="{{ route('admin.invoice.show', $invoiceDP) }}" class="text-xs text-blue-600 hover:underline">Lihat Invoice</a>
         </div>
+        @else
+        <form action="{{ route('admin.invoice.create-dp', $pesanan) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn-primary w-full text-sm">Terbitkan Invoice DP</button>
+        </form>
+        @endif
+    </div>
+
+    <!-- Invoice Pelunasan -->
+    <div>
+        <p class="text-sm font-medium text-gray-700 mb-2">Invoice Pelunasan (50%)</p>
+        @if($invoicePelunasan)
+        <div class="bg-gray-50 p-3 rounded-lg">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs text-gray-600 truncate">{{ $invoicePelunasan->nomor_invoice }}</span>
+                @if($invoicePelunasan->status == 'Lunas')
+                <span class="badge-success text-xs">Lunas</span>
+                @elseif($invoicePelunasan->status == 'Menunggu Verifikasi')
+                <span class="badge-warning text-xs">Pending</span>
+                @elseif($invoicePelunasan->status == 'Dibatalkan')
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                    Dibatalkan
+                </span>
+                @else
+                <span class="badge-danger text-xs">Belum Dibayar</span>
+                @endif
+            </div>
+            <p class="font-semibold text-gray-900">Rp {{ number_format($invoicePelunasan->jumlah, 0, ',', '.') }}</p>
+            <a href="{{ route('admin.invoice.show', $invoicePelunasan) }}" class="text-xs text-blue-600 hover:underline">Lihat Invoice</a>
+        </div>
+        @elseif($invoiceDP && $invoiceDP->status == 'Lunas' && in_array($pesanan->status, ['Preview Siap', 'Menunggu Pelunasan']))
+        <form action="{{ route('admin.invoice.create-pelunasan', $pesanan) }}" method="POST">
+            @csrf
+            <button type="submit" class="btn-primary w-full text-sm">Terbitkan Invoice Pelunasan</button>
+        </form>
+        @else
+        <p class="text-xs text-gray-500 text-center py-2 bg-gray-50 rounded-lg">DP harus lunas terlebih dahulu</p>
+        @endif
+    </div>
+</div>
 
         <!-- Quick Stats -->
         @if($pesanan->paket)
@@ -601,5 +682,26 @@
             sessionStorage.removeItem('pesanan_detail_loaded');
         }
     });
+
+    // Copy link functionality for revision links
+    function copyRevisionLink(link, revisionId) {
+        navigator.clipboard.writeText(link).then(function() {
+            const copyBtn = document.getElementById('copyBtnRevisi' + revisionId);
+            const originalHTML = copyBtn.innerHTML;
+            
+            copyBtn.innerHTML = `
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            `;
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalHTML;
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Could not copy text: ', err);
+            alert('Gagal menyalin link');
+        });
+    }
 </script>
 @endsection

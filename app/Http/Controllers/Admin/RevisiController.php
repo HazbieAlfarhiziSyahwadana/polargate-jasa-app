@@ -55,6 +55,12 @@ class RevisiController extends Controller
             'catatan_admin' => 'nullable|string'
         ]);
 
+        // ✅ TAMBAHAN: Validasi jika status diubah ke Selesai harus ada link preview
+        if ($request->status === 'Selesai' && empty($revisi->catatan_admin)) {
+            return redirect()->back()
+                ->with('error', 'Tidak dapat mengubah status ke Selesai. Silakan upload link preview terlebih dahulu.');
+        }
+
         DB::beginTransaction();
         try {
             $revisi->update([
@@ -77,6 +83,40 @@ class RevisiController extends Controller
             return redirect()->back()->with('error', 'Gagal memperbarui status: ' . $e->getMessage());
         }
     }
+
+    /**
+     * ✅ TAMBAHAN: Upload link preview hasil revisi
+     */
+    /**
+ * ✅ PERBAIKAN FINAL: Upload link preview hasil revisi
+ */
+public function uploadLink(Request $request, Revisi $revisi)
+{
+    $validated = $request->validate([
+        'link_preview' => 'required|url',
+        'catatan_hasil' => 'nullable|string|max:1000',
+    ]);
+
+    try {
+        $updateData = [
+            'preview_link' => $validated['link_preview'],
+            'is_preview_active' => true,
+            'preview_expired_at' => now()->addDays(7), // 7 hari kedepan
+        ];
+
+        if (!empty($validated['catatan_hasil'])) {
+            $updateData['catatan_hasil'] = $validated['catatan_hasil'];
+        }
+
+        $revisi->update($updateData);
+
+        return redirect()->back()
+            ->with('success', 'Link preview berhasil disimpan');
+    } catch (\Exception $e) {
+        return redirect()->back()
+            ->with('error', 'Gagal menyimpan link preview: ' . $e->getMessage());
+    }
+}
 
     public function downloadFile(Revisi $revisi, $index)
     {

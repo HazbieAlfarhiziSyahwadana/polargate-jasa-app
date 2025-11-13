@@ -92,6 +92,7 @@
             <div>
                 <p class="text-blue-100 text-sm font-medium">Total Pesanan</p>
                 <p class="text-3xl font-bold mt-2" id="total-pesanan">{{ $total_pesanan }}</p>
+                <p class="text-blue-100 text-xs mt-1">Semua pesanan</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,6 +107,7 @@
             <div>
                 <p class="text-yellow-100 text-sm font-medium">Pesanan Aktif</p>
                 <p class="text-3xl font-bold mt-2" id="pesanan-aktif">{{ $pesanan_aktif }}</p>
+                <p class="text-yellow-100 text-xs mt-1">Dalam proses</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,6 +122,7 @@
             <div>
                 <p class="text-green-100 text-sm font-medium">Pesanan Selesai</p>
                 <p class="text-3xl font-bold mt-2" id="pesanan-selesai">{{ $pesanan_selesai }}</p>
+                <p class="text-green-100 text-xs mt-1">Berhasil diselesaikan</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,6 +137,7 @@
             <div>
                 <p class="text-purple-100 text-sm font-medium">Total Belanja</p>
                 <p class="text-2xl md:text-3xl font-bold mt-2" id="total-pembayaran">Rp {{ number_format($total_pembayaran, 0, ',', '.') }}</p>
+                <p class="text-purple-100 text-xs mt-1">Invoice lunas</p>
             </div>
             <div class="bg-white bg-opacity-20 rounded-full p-3">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,6 +162,11 @@
 
         <div class="space-y-3" id="pesanan-terbaru-container">
             @forelse($pesanan_terbaru as $pesanan)
+            {{-- ✅ Skip pesanan yang dibatalkan --}}
+            @if($pesanan->status === 'Dibatalkan')
+                @continue
+            @endif
+            
             <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg item-row">
                 <div class="flex-1">
                     <p class="font-semibold text-gray-800">{{ $pesanan->kode_pesanan }}</p>
@@ -205,6 +214,11 @@
 
         <div class="space-y-3" id="invoice-pending-container">
             @forelse($invoice_pending as $invoice)
+            {{-- ✅ Skip invoice yang dibatalkan atau pesanan dibatalkan --}}
+            @if($invoice->status === 'Dibatalkan' || $invoice->pesanan->status === 'Dibatalkan')
+                @continue
+            @endif
+            
             <div class="flex items-center justify-between p-4 bg-yellow-50 border border-yellow-200 rounded-lg item-row">
                 <div class="flex-1">
                     <p class="font-semibold text-gray-800">{{ $invoice->nomor_invoice }}</p>
@@ -242,6 +256,12 @@
             </div>
             @endforelse
         </div>
+
+        @if($invoice_pending->count() > 0)
+        <a href="{{ route('client.invoice.index') }}" class="block text-center text-primary-600 hover:text-primary-700 font-medium mt-4 transition-colors">
+            Lihat Semua Invoice →
+        </a>
+        @endif
     </div>
 </div>
 
@@ -280,6 +300,7 @@
     function getStatusBadgeClass(status) {
         if (status === 'Selesai') return 'badge-success';
         if (status === 'Menunggu Pembayaran DP' || status === 'Menunggu Pelunasan') return 'badge-warning';
+        if (status === 'Dibatalkan') return 'badge-secondary';
         return 'badge-info';
     }
 
@@ -334,7 +355,10 @@
     function updatePesananTerbaru(pesanan) {
         const container = document.getElementById('pesanan-terbaru-container');
         
-        if (pesanan.length === 0) {
+        // ✅ Filter pesanan yang dibatalkan
+        const activePesanan = pesanan.filter(p => p.status !== 'Dibatalkan');
+        
+        if (activePesanan.length === 0) {
             container.innerHTML = `
                 <div class="text-center py-8">
                     <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,7 +371,7 @@
         }
 
         let html = '';
-        pesanan.forEach(item => {
+        activePesanan.forEach(item => {
             const statusClass = getStatusBadgeClass(item.status);
             const detailUrl = `/client/pesanan/${item.id}`;
             
@@ -373,7 +397,12 @@
     function updateInvoicePending(invoices) {
         const container = document.getElementById('invoice-pending-container');
         
-        if (invoices.length === 0) {
+        // ✅ Filter invoice yang dibatalkan atau pesanan dibatalkan
+        const activeInvoices = invoices.filter(inv => 
+            inv.status !== 'Dibatalkan' && inv.pesanan.status !== 'Dibatalkan'
+        );
+        
+        if (activeInvoices.length === 0) {
             container.innerHTML = `
                 <div class="text-center py-8">
                     <svg class="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -386,7 +415,7 @@
         }
 
         let html = '';
-        invoices.forEach(invoice => {
+        activeInvoices.forEach(invoice => {
             const pembayaranUrl = `/client/pembayaran/invoice/${invoice.id}`;
             
             // Cek status pembayaran

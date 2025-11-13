@@ -71,6 +71,7 @@
 
     .image-hover {
         transition: transform 0.3s ease;
+        cursor: pointer;
     }
 
     .image-hover:hover {
@@ -85,7 +86,212 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
     }
+
+    /* Enhanced Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(10px);
+    }
+
+    .modal-content {
+        position: relative;
+        margin: 2% auto;
+        width: 95%;
+        max-width: 1200px;
+        background: transparent;
+        border-radius: 12px;
+        overflow: hidden;
+        animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+
+    .modal-header {
+        padding: 1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+    }
+
+    .modal-body {
+        padding: 0;
+    }
+
+    .close-modal {
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .close-modal:hover {
+        background: rgba(0, 0, 0, 0.9);
+        transform: scale(1.1);
+    }
+
+    .media-preview {
+        width: 100%;
+        height: 70vh;
+        object-fit: contain;
+        background: #000;
+    }
+
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+        background: #000;
+    }
+
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    /* Enhanced Media Display in Table */
+    .media-display {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+    }
+
+    .media-display:hover {
+        transform: scale(1.05);
+        border-color: #3b82f6;
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    }
+
+    .media-display img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .video-thumbnail {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .play-icon {
+        color: white;
+        width: 24px;
+        height: 24px;
+    }
+
+    .media-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 3px 8px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .no-media {
+        background: linear-gradient(135deg, #6b7280, #9ca3af);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-media svg {
+        color: #d1d5db;
+    }
+
+    /* Media Info Overlay */
+    .media-info-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        padding: 1rem 0.75rem 0.5rem;
+        color: white;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+
+    .media-display:hover .media-info-overlay {
+        transform: translateY(0);
+    }
+
+    .media-title {
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .media-type {
+        font-size: 0.6rem;
+        opacity: 0.8;
+    }
 </style>
+
+<!-- Modal for Media Preview -->
+<div id="mediaModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="text-lg font-semibold text-white" id="modalTitle">Preview Media</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="mediaContent">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade">
     <div>
@@ -205,7 +411,7 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gambar</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Media</th>
                     <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Layanan</th>
                     <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kategori</th>
                     <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Mulai</th>
@@ -222,8 +428,44 @@
                     data-harga="{{ $item->harga_mulai }}"
                     data-status="{{ $item->is_active ? 'aktif' : 'nonaktif' }}">
                     <td class="px-4 md:px-6 py-4 whitespace-nowrap">
-                        <div class="overflow-hidden rounded-lg">
-                            <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}" class="w-16 h-16 object-cover shadow-md image-hover">
+                        <div class="media-display 
+                            @if($item->video_url) video-thumbnail 
+                            @elseif($item->gambar_url) 
+                            @else no-media @endif"
+                            onclick="openMediaModal('{{ $item->nama_layanan }}', 
+                            '{{ $item->video_url ? 'video' : 'image' }}', 
+                            '{{ $item->video_url ? ($item->youtube_embed_url ?? $item->video_url) : $item->gambar_url }}')">
+                            
+                            @if($item->video_url)
+                                <svg class="play-icon" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                <div class="media-badge">
+                                    <i class="fas fa-video text-xs"></i>
+                                </div>
+                            @elseif($item->gambar_url)
+                                <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_layanan }}">
+                                <div class="media-badge">
+                                    <i class="fas fa-image text-xs"></i>
+                                </div>
+                            @else
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            @endif
+
+                            <div class="media-info-overlay">
+                                <div class="media-title">{{ Str::limit($item->nama_layanan, 15) }}</div>
+                                <div class="media-type">
+                                    @if($item->video_url)
+                                        Video YouTube
+                                    @elseif($item->gambar_url)
+                                        Gambar
+                                    @else
+                                        Tidak ada media
+                                    @endif
+                                </div>
+                            </div>
                         </div>
                     </td>
                     <td class="px-4 md:px-6 py-4">
@@ -377,6 +619,90 @@
             statusFilter.value = '';
             filterLayanan();
         });
+    });
+
+    // Enhanced Media Modal Functions
+    function openMediaModal(title, type, url) {
+        const modal = document.getElementById('mediaModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const mediaContent = document.getElementById('mediaContent');
+
+        modalTitle.textContent = title;
+        
+        if (type === 'video') {
+            // Check if it's a YouTube URL and convert to embed URL
+            let embedUrl = url;
+            if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+                const videoId = getYouTubeId(url);
+                if (videoId) {
+                    embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
+                }
+            }
+            
+            mediaContent.innerHTML = `
+                <div class="video-container">
+                    <iframe src="${embedUrl}" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+        } else {
+            // For images
+            mediaContent.innerHTML = `
+                <img src="${url}" alt="${title}" class="media-preview">
+            `;
+        }
+
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
+        // Add escape key listener
+        const escapeHandler = function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        };
+        document.addEventListener('keydown', escapeHandler);
+        
+        // Store the handler for cleanup
+        modal._escapeHandler = escapeHandler;
+    }
+
+    function getYouTubeId(url) {
+        const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[7].length === 11) ? match[7] : null;
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('mediaModal');
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        // Clean up event listener
+        if (modal._escapeHandler) {
+            document.removeEventListener('keydown', modal._escapeHandler);
+            delete modal._escapeHandler;
+        }
+        
+        // Stop video if playing
+        const iframe = document.querySelector('#mediaContent iframe');
+        if (iframe) {
+            iframe.src = iframe.src.replace('&autoplay=1', '');
+        }
+    }
+
+    // Close modal
+    document.querySelector('.close-modal').addEventListener('click', closeModal);
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('mediaModal');
+        if (event.target === modal) {
+            closeModal();
+        }
     });
 
     window.addEventListener('beforeunload', function(e) {

@@ -94,24 +94,17 @@
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between animate-slideInLeft" style="animation-delay: 0.3s;">
-                    <label class="flex items-center cursor-pointer group">
-                        <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer transition-all duration-300">
-                        <span class="ml-2 text-sm text-gray-600 group-hover:text-primary-600 transition-colors duration-300">Ingat Saya</span>
-                    </label>
+                <!-- Forgot Password Link (moved here) -->
+                <div class="text-right animate-slideInLeft" style="animation-delay: 0.3s;">
+                    <a href="{{ route('password.request') }}" class="text-sm text-primary-600 hover:text-primary-700 font-medium hover:underline transition-colors duration-300">
+                        Lupa Password?
+                    </a>
                 </div>
 
                 <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-3.5 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] animate-slideInLeft" style="animation-delay: 0.4s;">
                     <i class="fas fa-sign-in-alt mr-2"></i>Login Sekarang
                 </button>
             </form>
-
-            <!-- Forgot Password Link -->
-            <div class="mt-4 text-center animate-fadeIn" style="animation-delay: 0.5s;">
-                <a href="{{ route('password.request') }}" class="text-sm text-blue-500 hover:text-blue-700 transition-colors duration-300">
-                    Lupa Password?
-                </a>
-            </div>
 
             <!-- Register Link -->
             <div class="mt-8 text-center animate-fadeIn" style="animation-delay: 0.5s;">
