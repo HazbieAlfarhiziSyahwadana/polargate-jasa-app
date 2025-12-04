@@ -32,9 +32,15 @@
 
     .input-field, select, textarea {
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        width: 100%;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        outline: none;
     }
 
     .input-field:focus, select:focus, textarea:focus {
+        border-color: #3b82f6;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
@@ -48,11 +54,22 @@
     }
 
     .form-label {
-        @apply flex items-center gap-2 text-gray-700 text-sm font-semibold mb-2;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #374151;
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
     }
 
     .error-message {
-        @apply text-red-500 text-xs mt-2 flex items-center gap-1;
+        color: #ef4444;
+        font-size: 0.75rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
     }
 
     .error-message::before {
@@ -60,11 +77,74 @@
     }
 
     .btn-danger-outline {
-        @apply px-3 py-2 border-2 border-red-500 text-red-600 rounded-lg hover:bg-red-50 font-medium inline-flex items-center justify-center gap-2 transition-all duration-200;
+        padding: 0.5rem 0.75rem;
+        border: 2px solid #ef4444;
+        color: #dc2626;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        background: white;
     }
 
     .btn-danger-outline:hover {
+        background-color: #fef2f2;
         transform: scale(1.05);
+    }
+
+    .btn-secondary {
+        padding: 0.625rem 1rem;
+        background: white;
+        border: 1px solid #d1d5db;
+        color: #374151;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #f9fafb;
+    }
+
+    .btn-primary {
+        padding: 0.625rem 1rem;
+        background: #2563eb;
+        color: white;
+        border-radius: 0.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+    .card {
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        border: 1px solid #e5e7eb;
+        padding: 1rem;
+    }
+
+    @media (min-width: 768px) {
+        .card {
+            padding: 1.5rem;
+        }
     }
 </style>
 
@@ -86,57 +166,26 @@
 
     <div class="max-w-4xl animate-slide">
         <div class="card">
-            <form action="{{ route('admin.paket.store') }}" method="POST" x-data="paketForm()" class="space-y-6">
+            <form action="{{ route('admin.paket.store') }}" method="POST" class="space-y-6">
                 @csrf
 
                 <!-- Layanan -->
-                <div class="relative" x-data="{ open: false, selected: {{ old('layanan_id') ?? 'null' }} }">
+                <div class="relative">
                     <label class="form-label">
-                        <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                         </svg>
                         Layanan <span class="text-red-500">*</span>
                     </label>
                     
-                    <input type="hidden" name="layanan_id" :value="selected" required>
-                    
-                    <button type="button" @click="open = !open" 
-                            class="w-full input-field text-left flex items-center justify-between @error('layanan_id') border-red-500 @enderror"
-                            :class="{ 'border-primary-500': open }">
-                        <span x-show="!selected" class="text-gray-400">Pilih Layanan</span>
+                    <select name="layanan_id" id="layanan_id" class="input-field w-full @error('layanan_id') border-red-500 @enderror" required>
+                        <option value="">Pilih Layanan</option>
                         @foreach($layanan as $item)
-                        <span x-show="selected == {{ $item->id }}" class="flex items-center gap-2 truncate">
-                            <span class="font-medium truncate">{{ $item->nama_layanan }}</span>
-                            <span class="hidden sm:inline text-gray-500 text-xs flex-shrink-0">• {{ $item->kategori }}</span>
-                        </span>
+                        <option value="{{ $item->id }}" {{ old('layanan_id') == $item->id ? 'selected' : '' }}>
+                            {{ $item->nama_layanan }} • {{ $item->kategori }}
+                        </option>
                         @endforeach
-                        <svg class="w-5 h-5 text-gray-400 transition-transform flex-shrink-0" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-                    
-                    <div x-show="open" 
-                         @click.away="open = false" 
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         x-transition:leave="transition ease-in duration-75"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         class="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto"
-                         style="display: none;">
-                        @foreach($layanan as $item)
-                        <button type="button" 
-                                @click="selected = {{ $item->id }}; open = false"
-                                :class="{ 'bg-primary-50 border-l-4 border-primary-500': selected == {{ $item->id }} }"
-                                class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
-                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-                                <span class="font-medium text-gray-900 text-sm">{{ $item->nama_layanan }}</span>
-                                <span class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600 w-fit">{{ $item->kategori }}</span>
-                            </div>
-                        </button>
-                        @endforeach
-                    </div>
+                    </select>
                     
                     @error('layanan_id')
                     <p class="error-message">{{ $message }}</p>
@@ -146,7 +195,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="nama_paket" class="form-label">
-                            <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                             </svg>
                             Nama Paket <span class="text-red-500">*</span>
@@ -179,7 +228,7 @@
 
                 <div>
                     <label for="deskripsi" class="form-label">
-                        <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
                         </svg>
                         Deskripsi <span class="text-red-500">*</span>
@@ -192,51 +241,75 @@
                     @enderror
                 </div>
 
+                <!-- Fitur Paket - Versi yang sangat sederhana -->
                 <div>
                     <label class="form-label mb-3">
-                        <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
                         </svg>
                         Fitur Paket <span class="text-red-500">*</span>
                     </label>
                     
-                    <div class="space-y-3">
-                        <template x-for="(fitur, index) in fiturList" :key="index">
-                            <div class="flex gap-2">
-                                <div class="flex-shrink-0 w-8 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center text-white text-sm font-semibold">
-                                    <span x-text="index + 1"></span>
+                    <div class="space-y-3" id="fitur-fields">
+                        @if(old('fitur') && is_array(old('fitur')) && count(old('fitur')) > 0)
+                            @foreach(old('fitur') as $index => $fitur)
+                            <div class="flex gap-2 fitur-item" data-index="{{ $index }}">
+                                <div class="fitur-number">
+                                    {{ $loop->iteration }}
                                 </div>
                                 <input 
                                     type="text" 
-                                    :name="'fitur[' + index + ']'" 
-                                    x-model="fiturList[index]"
+                                    name="fitur[]" 
+                                    value="{{ $fitur }}"
                                     class="input-field flex-1" 
                                     placeholder="Contoh: Durasi 30 detik"
                                     required
                                 >
+                                @if($loop->index > 0)
                                 <button 
                                     type="button" 
-                                    @click="removeFitur(index)" 
-                                    class="btn-danger-outline flex-shrink-0"
-                                    x-show="fiturList.length > 1">
+                                    class="btn-danger-outline flex-shrink-0 remove-fitur-btn">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                     </svg>
                                 </button>
+                                @endif
                             </div>
-                        </template>
+                            @endforeach
+                        @else
+                            <div class="flex gap-2 fitur-item" data-index="0">
+                                <div class="fitur-number">
+                                    1
+                                </div>
+                                <input 
+                                    type="text" 
+                                    name="fitur[]" 
+                                    class="input-field flex-1" 
+                                    placeholder="Contoh: Durasi 30 detik"
+                                    required
+                                >
+                            </div>
+                        @endif
                     </div>
                     
-                    <button type="button" @click="addFitur" 
+                    <button type="button" id="tambah-fitur-btn" 
                             class="btn-secondary mt-3 w-full sm:w-auto">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
                         </svg>
                         Tambah Fitur
                     </button>
+                    
                     @error('fitur')
                     <p class="error-message">{{ $message }}</p>
                     @enderror
+                    @if($errors->has('fitur.*'))
+                        @foreach($errors->get('fitur.*') as $messages)
+                            @foreach($messages as $message)
+                                <p class="error-message">{{ $message }}</p>
+                            @endforeach
+                        @endforeach
+                    @endif
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -276,7 +349,7 @@
                 <div>
                     <label class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                         <input type="checkbox" name="is_active" value="1" 
-                               class="rounded border-gray-300 text-primary-600 focus:ring-primary-500 w-4 h-4" 
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4" 
                                {{ old('is_active', true) ? 'checked' : '' }}>
                         <div class="flex items-center gap-2">
                             <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,32 +373,139 @@
     </div>
 </div>
 
-@push('scripts')
 <script>
-function paketForm() {
-    return {
-        fiturList: [''],
-        addFitur() {
-            this.fiturList.push('');
-        },
-        removeFitur(index) {
-            this.fiturList.splice(index, 1);
-        }
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    const isFirstLoad = !sessionStorage.getItem('paket_create_loaded');
+    console.log('DOM loaded, initializing fitur form...');
     
+    // Inisialisasi nomor fitur
+    updateFiturNumbers();
+    
+    // Event listener untuk tombol Tambah Fitur
+    const tambahFiturBtn = document.getElementById('tambah-fitur-btn');
+    if (tambahFiturBtn) {
+        console.log('Tambah Fitur button found');
+        tambahFiturBtn.addEventListener('click', function() {
+            console.log('Tambah Fitur button clicked');
+            addFitur();
+        });
+    } else {
+        console.error('Tambah Fitur button not found!');
+    }
+    
+    // Event delegation untuk tombol hapus fitur
+    document.getElementById('fitur-fields').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-fitur-btn')) {
+            const fiturItem = e.target.closest('.fitur-item');
+            if (fiturItem) {
+                removeFitur(fiturItem);
+            }
+        }
+    });
+    
+    // Animasi page load
+    const isFirstLoad = !sessionStorage.getItem('paket_create_loaded');
     if (isFirstLoad) {
         document.body.classList.add('page-load');
         sessionStorage.setItem('paket_create_loaded', 'true');
-        
         setTimeout(() => {
             document.body.classList.remove('page-load');
         }, 1000);
     }
 });
+
+// Fungsi untuk menambah fitur
+function addFitur() {
+    console.log('addFitur function called');
+    const fiturFields = document.getElementById('fitur-fields');
+    if (!fiturFields) {
+        console.error('fitur-fields element not found!');
+        return;
+    }
+    
+    const fiturCount = fiturFields.querySelectorAll('.fitur-item').length;
+    console.log('Current fitur count:', fiturCount);
+    
+    const newFitur = document.createElement('div');
+    newFitur.className = 'flex gap-2 fitur-item';
+    newFitur.setAttribute('data-index', fiturCount);
+    
+    newFitur.innerHTML = `
+        <div class="fitur-number">
+            ${fiturCount + 1}
+        </div>
+        <input 
+            type="text" 
+            name="fitur[]" 
+            class="input-field flex-1" 
+            placeholder="Contoh: Durasi 30 detik"
+            required
+        >
+        <button 
+            type="button" 
+            class="btn-danger-outline flex-shrink-0 remove-fitur-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+        </button>
+    `;
+    
+    fiturFields.appendChild(newFitur);
+    updateFiturNumbers();
+    console.log('New fitur added successfully');
+}
+
+// Fungsi untuk menghapus fitur
+function removeFitur(fiturItem) {
+    const fiturFields = document.getElementById('fitur-fields');
+    const fiturItems = fiturFields.querySelectorAll('.fitur-item');
+    
+    // Pastikan minimal ada 1 fitur
+    if (fiturItems.length > 1) {
+        fiturItem.remove();
+        updateFiturNumbers();
+    }
+}
+
+// Fungsi untuk update nomor fitur
+function updateFiturNumbers() {
+    const fiturItems = document.querySelectorAll('.fitur-item');
+    fiturItems.forEach((item, index) => {
+        const numberDiv = item.querySelector('.fitur-number');
+        if (numberDiv) {
+            numberDiv.textContent = index + 1;
+        }
+        item.setAttribute('data-index', index);
+        
+        // Tampilkan tombol hapus hanya jika bukan fitur pertama
+        const removeBtn = item.querySelector('.remove-fitur-btn');
+        if (removeBtn) {
+            if (index === 0) {
+                removeBtn.style.display = 'none';
+            } else {
+                removeBtn.style.display = 'inline-flex';
+            }
+        }
+    });
+}
+
+// CSS untuk nomor fitur
+const style = document.createElement('style');
+style.textContent = `
+    .fitur-number {
+        flex-shrink: 0;
+        width: 2rem;
+        height: 2.5rem;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+`;
+document.head.appendChild(style);
 
 window.addEventListener('beforeunload', function(e) {
     if (e.target.activeElement.tagName === 'A' && 
@@ -334,5 +514,4 @@ window.addEventListener('beforeunload', function(e) {
     }
 });
 </script>
-@endpush
 @endsection

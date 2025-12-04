@@ -4,7 +4,7 @@
 
 @section('content')
 <style>
-    /* Modal Styles */
+    /* Modal Styles - Same as index */
     .modal {
         display: none;
         position: fixed;
@@ -14,7 +14,7 @@
         width: 100%;
         height: 100%;
         background-color: rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(10px);
     }
 
     .modal-content {
@@ -85,7 +85,7 @@
 
     .video-container {
         position: relative;
-        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        padding-bottom: 56.25%;
         height: 0;
         overflow: hidden;
         background: #000;
@@ -100,6 +100,67 @@
         border: none;
     }
 
+    /* Choice Modal */
+    .choice-modal {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        margin: 15vh auto;
+    }
+
+    .choice-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .choice-subtitle {
+        color: #6b7280;
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .choice-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .choice-btn {
+        padding: 1.5rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .choice-btn:hover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.2);
+    }
+
+    .choice-icon {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 0.75rem;
+        color: #3b82f6;
+    }
+
+    .choice-label {
+        font-weight: 600;
+        color: #1f2937;
+        font-size: 1rem;
+    }
+
+    /* Preview Container Styles */
     .full-card-image {
         width: 100%;
         height: 300px;
@@ -121,6 +182,11 @@
         margin-bottom: 1rem;
     }
 
+    .clickable-preview {
+        cursor: pointer;
+        position: relative;
+    }
+
     .play-button-overlay {
         position: absolute;
         top: 50%;
@@ -128,7 +194,7 @@
         transform: translate(-50%, -50%);
         width: 80px;
         height: 80px;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(220, 38, 38, 0.9);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -136,15 +202,17 @@
         cursor: pointer;
         transition: all 0.3s ease;
         opacity: 0;
+        z-index: 10;
+        border: 3px solid white;
     }
 
-    .media-preview-container:hover .play-button-overlay {
+    .clickable-preview:hover .play-button-overlay {
         opacity: 1;
     }
 
     .play-button-overlay:hover {
-        background: rgba(220, 38, 38, 0.9);
-        transform: translate(-50%, -50%) scale(1.1);
+        background: rgba(220, 38, 38, 1);
+        transform: translate(-50%, -50%) scale(1.15);
     }
 
     .play-icon {
@@ -157,13 +225,17 @@
         position: absolute;
         top: 12px;
         right: 12px;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(0, 0, 0, 0.8);
         color: white;
-        padding: 6px 12px;
+        padding: 8px 16px;
         border-radius: 20px;
         font-size: 0.75rem;
         font-weight: 600;
         backdrop-filter: blur(10px);
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 6px;
     }
 
     .media-info {
@@ -171,9 +243,10 @@
         bottom: 0;
         left: 0;
         right: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+        background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
         padding: 2rem 1.5rem 1rem;
         color: white;
+        z-index: 5;
     }
 
     .media-title {
@@ -186,9 +259,98 @@
         font-size: 0.9rem;
         opacity: 0.9;
     }
+
+    /* Animation Styles */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .animate-fadeIn {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-fadeInUp {
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .animate-slideInLeft {
+        animation: slideInLeft 0.6s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+        20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    .animate-shake {
+        animation: shake 0.5s ease-in-out;
+    }
+
+    .input-wrapper {
+        position: relative;
+    }
+
+    .input-border {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(to right, #2563eb, #3b82f6);
+        transition: width 0.4s ease;
+    }
+
+    .input-focused .input-border {
+        width: 100%;
+    }
+
+    .form-group {
+        transition: transform 0.3s ease;
+    }
+
+    .form-group:hover {
+        transform: translateX(3px);
+    }
+
+    .video-preview-container {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .choice-buttons {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<!-- Modal for Media Preview -->
+<!-- Modal for Media Preview - Same structure as index -->
 <div id="mediaModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -196,9 +358,7 @@
             <button class="close-modal">&times;</button>
         </div>
         <div class="modal-body">
-            <div id="mediaContent">
-                <!-- Content will be inserted here -->
-            </div>
+            <div id="mediaContent"></div>
         </div>
     </div>
 </div>
@@ -222,45 +382,69 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Current Media Display -->
                 <div class="media-preview-container">
-                    @if($layanan->video_url)
-                        <!-- Video Thumbnail -->
-                        <div class="relative rounded-xl overflow-hidden shadow-2xl">
-                            <img src="{{ $layanan->youtube_thumbnail ?? $layanan->gambar_url }}" 
-                                 alt="{{ $layanan->nama_layanan }}" 
-                                 class="full-card-image"
-                                 onclick="openMediaModal('{{ $layanan->nama_layanan }}', 'video', '{{ $layanan->youtube_embed_url ?? $layanan->video_url }}')">
+                    @php
+                        $hasImage = !empty($layanan->gambar);
+                        $hasVideo = !empty($layanan->video_url);
+                    @endphp
+
+                    @if($hasImage || $hasVideo)
+                        <div class="relative rounded-xl overflow-hidden shadow-2xl clickable-preview media-display"
+                             data-title="{{ $layanan->nama_layanan }}"
+                             data-type="{{ $hasVideo ? 'video' : 'image' }}"
+                             data-url="{{ $hasVideo ? $layanan->video_url : $layanan->gambar_url }}"
+                             data-image-url="{{ $hasImage ? $layanan->gambar_url : '' }}"
+                             data-video-url="{{ $hasVideo ? $layanan->video_url : '' }}"
+                             data-has-image="{{ $hasImage ? 'true' : 'false' }}"
+                             data-has-video="{{ $hasVideo ? 'true' : 'false' }}">
                             
-                            <div class="play-button-overlay" 
-                                 onclick="openMediaModal('{{ $layanan->nama_layanan }}', 'video', '{{ $layanan->youtube_embed_url ?? $layanan->video_url }}')">
-                                <svg class="play-icon w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z"/>
-                                </svg>
-                            </div>
+                            @if($hasImage)
+                                <!-- Tampilkan Gambar -->
+                                <img src="{{ $layanan->gambar_url }}" 
+                                     alt="{{ $layanan->nama_layanan }}" 
+                                     class="full-card-image">
+                            @else
+                                <!-- Placeholder jika hanya ada video -->
+                                <div class="full-card-image bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                    <svg class="w-20 h-20 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                            @endif
                             
-                            <div class="media-badge">
-                                <i class="fas fa-video mr-1"></i>Video YouTube
-                            </div>
+                            @if($hasVideo)
+                                <!-- Play Button Overlay -->
+                                <div class="play-button-overlay">
+                                    <svg class="play-icon w-10 h-10" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                </div>
+                                
+                                <div class="media-badge">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                    <span>Ada Video YouTube</span>
+                                </div>
+                            @elseif($hasImage)
+                                <div class="media-badge">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    <span>Gambar</span>
+                                </div>
+                            @endif
                             
                             <div class="media-info">
                                 <div class="media-title">{{ $layanan->nama_layanan }}</div>
-                                <div class="media-description">Klik untuk memutar video</div>
-                            </div>
-                        </div>
-                    @elseif($layanan->gambar)
-                        <!-- Image Display -->
-                        <div class="relative rounded-xl overflow-hidden shadow-2xl">
-                            <img src="{{ $layanan->gambar_url }}" 
-                                 alt="{{ $layanan->nama_layanan }}" 
-                                 class="full-card-image"
-                                 onclick="openMediaModal('{{ $layanan->nama_layanan }}', 'image', '{{ $layanan->gambar_url }}')">
-                            
-                            <div class="media-badge">
-                                <i class="fas fa-image mr-1"></i>Gambar
-                            </div>
-                            
-                            <div class="media-info">
-                                <div class="media-title">{{ $layanan->nama_layanan }}</div>
-                                <div class="media-description">Klik untuk melihat gambar full size</div>
+                                <div class="media-description">
+                                    @if($hasVideo && $hasImage)
+                                        <i class="fas fa-hand-pointer mr-1"></i> Klik untuk pilihan gambar atau video
+                                    @elseif($hasVideo)
+                                        <i class="fas fa-play-circle mr-1"></i> Klik untuk memutar video
+                                    @else
+                                        <i class="fas fa-search-plus mr-1"></i> Klik untuk melihat gambar full
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     @else
@@ -288,38 +472,49 @@
                     
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between items-center py-2 border-b border-primary-100">
-                            <span class="text-gray-600">Tipe Media:</span>
+                            <span class="text-gray-600">Status Media:</span>
                             <span class="font-semibold text-primary-600">
-                                @if($layanan->video_url)
-                                    Video YouTube
-                                @elseif($layanan->gambar)
-                                    Gambar
+                                @if($hasImage && $hasVideo)
+                                    Gambar + Video
+                                @elseif($hasImage)
+                                    Gambar Saja
+                                @elseif($hasVideo)
+                                    Video Saja
                                 @else
                                     Tidak ada
                                 @endif
                             </span>
                         </div>
                         
-                        @if($layanan->video_url)
+                        @if($hasImage)
                         <div class="flex justify-between items-center py-2 border-b border-primary-100">
-                            <span class="text-gray-600">URL Video:</span>
-                            <span class="font-medium text-gray-700 text-xs truncate max-w-[200px]">
-                                {{ $layanan->video_url }}
-                            </span>
+                            <span class="text-gray-600">File Gambar:</span>
+                            <span class="font-medium text-gray-700 text-xs">{{ $layanan->gambar }}</span>
                         </div>
                         @endif
                         
-                        @if($layanan->gambar)
-                        <div class="flex justify-between items-center py-2 border-b border-primary-100">
-                            <span class="text-gray-600">File Gambar:</span>
-                            <span class="font-medium text-gray-700">{{ $layanan->gambar }}</span>
+                        @if($hasVideo)
+                        <div class="py-2 border-b border-primary-100">
+                            <span class="text-gray-600 block mb-1">URL Video:</span>
+                            <a href="{{ $layanan->video_url }}" target="_blank" class="font-medium text-blue-600 text-xs hover:underline break-all">
+                                {{ $layanan->video_url }}
+                            </a>
                         </div>
                         @endif
                         
                         <div class="mt-4 p-3 bg-primary-100 rounded-lg">
                             <p class="text-xs text-primary-700">
                                 <i class="fas fa-lightbulb mr-1"></i>
-                                <strong>Tips:</strong> Klik pada gambar di samping untuk melihat preview full size atau memutar video.
+                                <strong>Tips:</strong> 
+                                @if($hasVideo && $hasImage)
+                                    Klik pada preview untuk memilih tampilan gambar atau video.
+                                @elseif($hasVideo)
+                                    Klik pada preview untuk memutar video YouTube.
+                                @elseif($hasImage)
+                                    Klik pada preview untuk melihat gambar full size.
+                                @else
+                                    Upload gambar dan/atau tambahkan URL video YouTube.
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -327,6 +522,7 @@
             </div>
         </div>
 
+        <!-- Form fields -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Kategori -->
             <div class="form-group animate-slideInLeft" style="animation-delay: 0.1s;">
@@ -395,7 +591,7 @@
                 @error('gambar')
                 <p class="text-red-500 text-xs mt-1 animate-shake">{{ $message }}</p>
                 @enderror
-                <p class="text-xs text-gray-500 mt-1">Max 2MB (jpg, jpeg, png). Kosongkan jika tidak ingin mengubah</p>
+                <p class="text-xs text-gray-500 mt-1">Max 2MB. Kosongkan jika tidak ingin mengubah</p>
                 <img id="previewImage" class="mt-3 w-32 h-32 object-cover rounded-lg shadow-md hidden animate-fadeIn">
             </div>
 
@@ -408,22 +604,22 @@
                     <input type="url" name="video_url" id="video_url" 
                            value="{{ old('video_url', $layanan->video_url) }}" 
                            class="input-field @error('video_url') border-red-500 @enderror" 
-                           placeholder="https://youtube.com/watch?v=... atau https://youtu.be/...">
+                           placeholder="https://youtube.com/watch?v=...">
                     <div class="input-border"></div>
                 </div>
                 @error('video_url')
                 <p class="text-red-500 text-xs mt-1 animate-shake">{{ $message }}</p>
                 @enderror
-                <p class="text-xs text-gray-500 mt-1">Masukkan URL video YouTube. Jika diisi, akan menimpa gambar.</p>
+                <p class="text-xs text-blue-600 mt-1">
+                    <i class="fas fa-info-circle"></i> Video akan diputar saat preview diklik
+                </p>
                 
-                <!-- Video Preview -->
                 <div id="videoPreviewContainer" class="mt-3 hidden">
                     <div class="video-preview-container">
                         <div class="video-container">
                             <iframe id="videoPreview" src="" frameborder="0" allowfullscreen></iframe>
                         </div>
                     </div>
-                    <p class="text-xs text-gray-500 mt-2">Preview video</p>
                 </div>
             </div>
         </div>
@@ -464,10 +660,130 @@
     </form>
 </div>
 
-@push('scripts')
 <script>
-// Media Modal Functions
+document.addEventListener('DOMContentLoaded', function() {
+    // Media Display Click Handler - Same pattern as index
+    document.querySelectorAll('.media-display').forEach(mediaDiv => {
+        mediaDiv.addEventListener('click', function() {
+            const title = this.getAttribute('data-title');
+            const hasImage = this.getAttribute('data-has-image') === 'true';
+            const hasVideo = this.getAttribute('data-has-video') === 'true';
+            const imageUrl = this.getAttribute('data-image-url');
+            const videoUrl = this.getAttribute('data-video-url');
+            
+            console.log('Preview clicked:', { title, hasImage, hasVideo, imageUrl, videoUrl });
+            
+            if (hasImage && hasVideo) {
+                // Both image and video - show choice modal
+                showChoiceModal(title, imageUrl, videoUrl);
+            } else if (hasVideo) {
+                // Video only
+                openMediaModal(title, 'video', videoUrl);
+            } else if (hasImage) {
+                // Image only
+                openMediaModal(title, 'image', imageUrl);
+            }
+        });
+    });
+
+    // Close modal button
+    document.querySelector('.close-modal').addEventListener('click', closeModal);
+
+    // Click outside modal to close
+    window.addEventListener('click', function(event) {
+        const modal = document.getElementById('mediaModal');
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    // ESC key to close modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // Input focus effects
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.closest('.input-wrapper')?.classList.add('input-focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.closest('.input-wrapper')?.classList.remove('input-focused');
+        });
+    });
+
+    // Video URL preview on input
+    const videoUrlInput = document.getElementById('video_url');
+    if (videoUrlInput) {
+        videoUrlInput.addEventListener('input', function(e) {
+            const url = e.target.value;
+            const previewContainer = document.getElementById('videoPreviewContainer');
+            const videoPreview = document.getElementById('videoPreview');
+            
+            if (url) {
+                const youtubeId = getYouTubeId(url);
+                if (youtubeId) {
+                    const embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
+                    videoPreview.src = embedUrl;
+                    previewContainer.classList.remove('hidden');
+                } else {
+                    previewContainer.classList.add('hidden');
+                }
+            } else {
+                previewContainer.classList.add('hidden');
+            }
+        });
+
+        // Trigger on load if video URL exists
+        if (videoUrlInput.value) {
+            videoUrlInput.dispatchEvent(new Event('input'));
+        }
+    }
+});
+
+// Show choice modal when both image and video exist
+function showChoiceModal(title, imageUrl, videoUrl) {
+    const modal = document.getElementById('mediaModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const mediaContent = document.getElementById('mediaContent');
+
+    modalTitle.textContent = title;
+    
+    mediaContent.innerHTML = `
+        <div class="choice-modal">
+            <h3 class="choice-title">Pilih Media</h3>
+            <p class="choice-subtitle">Layanan ini memiliki gambar dan video</p>
+            
+            <div class="choice-buttons">
+                <button class="choice-btn" onclick="openMediaModal('${title}', 'image', '${imageUrl}')">
+                    <svg class="choice-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <div class="choice-label">Lihat Gambar</div>
+                </button>
+                
+                <button class="choice-btn" onclick="openMediaModal('${title}', 'video', '${videoUrl}')">
+                    <svg class="choice-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="choice-label">Putar Video</div>
+                </button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+// Open media modal - Same as index
 function openMediaModal(title, type, url) {
+    console.log('Opening modal:', { title, type, url });
+    
     const modal = document.getElementById('mediaModal');
     const modalTitle = document.getElementById('modalTitle');
     const mediaContent = document.getElementById('mediaContent');
@@ -475,6 +791,12 @@ function openMediaModal(title, type, url) {
     modalTitle.textContent = title;
     
     if (type === 'video') {
+        // Convert YouTube URL to embed format
+        const youtubeId = getYouTubeId(url);
+        if (youtubeId) {
+            url = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`;
+        }
+        
         mediaContent.innerHTML = `
             <div class="video-container">
                 <iframe src="${url}" 
@@ -494,6 +816,42 @@ function openMediaModal(title, type, url) {
     document.body.style.overflow = 'hidden';
 }
 
+// Close modal - Same as index
+function closeModal() {
+    const modal = document.getElementById('mediaModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // Stop video if playing
+    const iframe = document.querySelector('#mediaContent iframe');
+    if (iframe) {
+        iframe.src = '';
+    }
+}
+
+// Get YouTube ID from URL - Same as index
+function getYouTubeId(url) {
+    if (!url) return null;
+    
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/\?v=)([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/watch\?.*v=([a-zA-Z0-9_-]{11})/,
+        /youtu\.be\/([a-zA-Z0-9_-]{11})/,
+        /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+        /^([a-zA-Z0-9_-]{11})$/
+    ];
+    
+    for (let pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+    
+    return null;
+}
+
+// Preview image on file input change
 function previewImage(event, previewId) {
     const preview = document.getElementById(previewId);
     const file = event.target.files[0];
@@ -507,174 +865,5 @@ function previewImage(event, previewId) {
         reader.readAsDataURL(file);
     }
 }
-
-// YouTube URL processing and preview
-document.getElementById('video_url').addEventListener('input', function(e) {
-    const url = e.target.value;
-    const previewContainer = document.getElementById('videoPreviewContainer');
-    const videoPreview = document.getElementById('videoPreview');
-    
-    if (url) {
-        const youtubeId = getYouTubeId(url);
-        if (youtubeId) {
-            const embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
-            videoPreview.src = embedUrl;
-            previewContainer.classList.remove('hidden');
-        } else {
-            previewContainer.classList.add('hidden');
-        }
-    } else {
-        previewContainer.classList.add('hidden');
-    }
-});
-
-function getYouTubeId(url) {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[7].length === 11) ? match[7] : null;
-}
-
-// Close modal
-document.querySelector('.close-modal').addEventListener('click', function() {
-    document.getElementById('mediaModal').style.display = 'none';
-    document.body.style.overflow = 'auto';
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('mediaModal');
-    if (event.target === modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-});
-
-// Add focus effect to inputs
-document.querySelectorAll('input[type="text"], input[type="number"], input[type="file"], input[type="url"], select, textarea').forEach(input => {
-    input.addEventListener('focus', function() {
-        this.closest('.input-wrapper')?.classList.add('input-focused');
-    });
-    
-    input.addEventListener('blur', function() {
-        this.closest('.input-wrapper')?.classList.remove('input-focused');
-    });
-});
-
-// Initialize video preview if there's existing video URL
-document.addEventListener('DOMContentLoaded', function() {
-    const videoUrl = document.getElementById('video_url').value;
-    if (videoUrl) {
-        document.getElementById('video_url').dispatchEvent(new Event('input'));
-    }
-});
 </script>
-@endpush
-
-<style>
-/* Existing styles remain the same */
-.video-preview-container {
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.video-container {
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-}
-
-.video-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-/* Fade In Animation */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.animate-fadeIn {
-    animation: fadeIn 0.6s ease-out;
-}
-
-/* Fade In Up Animation */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fadeInUp {
-    animation: fadeInUp 0.6s ease-out;
-}
-
-/* Slide In Left Animation */
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.animate-slideInLeft {
-    animation: slideInLeft 0.6s ease-out forwards;
-    opacity: 0;
-}
-
-/* Shake Animation for Errors */
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-    20%, 40%, 60%, 80% { transform: translateX(5px); }
-}
-
-.animate-shake {
-    animation: shake 0.5s ease-in-out;
-}
-
-/* Input Focus Effect */
-.input-wrapper {
-    position: relative;
-}
-
-.input-border {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: linear-gradient(to right, #2563eb, #3b82f6);
-    transition: width 0.4s ease;
-    border-radius: 0 0 12px 12px;
-}
-
-.input-focused .input-border {
-    width: 100%;
-}
-
-/* Form Group Animation */
-.form-group {
-    transition: transform 0.3s ease;
-}
-
-.form-group:hover {
-    transform: translateX(3px);
-}
-</style>
 @endsection

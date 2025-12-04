@@ -13,7 +13,6 @@ class LayananController extends Controller
     {
         $query = Layanan::withCount('pesanan')->latest();
 
-        // Search functionality
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -24,17 +23,16 @@ class LayananController extends Controller
             });
         }
 
-        // Filter kategori
         if ($request->has('kategori') && $request->kategori != '') {
             $query->where('kategori', $request->kategori);
         }
 
-        // Filter status
         if ($request->has('status') && $request->status != '') {
             $query->where('is_active', $request->status == 'aktif');
         }
 
-        $layanan = $query->get();
+        // ✅ UBAH dari get() menjadi paginate()
+        $layanan = $query->paginate(9);
 
         return view('admin.layanan.index', compact('layanan'));
     }
@@ -52,7 +50,7 @@ class LayananController extends Controller
             'deskripsi' => 'required|string',
             'gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'video_url' => 'nullable|url|max:500',
-            'harga_mulai' => 'required|numeric|min:0',
+            'harga_mulai' => 'required|numeric|min:0|max:9999999999',
             'is_active' => 'boolean',
         ], [
             'kategori.required' => 'Kategori wajib dipilih.',
@@ -65,11 +63,11 @@ class LayananController extends Controller
             'video_url.max' => 'URL video maksimal 500 karakter.',
             'harga_mulai.required' => 'Harga mulai wajib diisi.',
             'harga_mulai.numeric' => 'Harga harus berupa angka.',
+            'harga_mulai.max' => 'Harga maksimal Rp 9.999.999.999.',
         ]);
 
-        // Upload gambar jika ada
+        // ✅ Upload gambar jika ada (TIDAK DIHAPUS meski ada video)
         if ($request->hasFile('gambar')) {
-            // Validasi gambar
             $validation = FileHelper::validateImage($request->file('gambar'), 2048);
             if (!$validation['valid']) {
                 return redirect()->back()
@@ -80,11 +78,7 @@ class LayananController extends Controller
             $validated['gambar'] = FileHelper::uploadFile($request->file('gambar'), 'layanan');
         }
 
-        // Jika ada video URL, hapus gambar yang diupload (video prioritas)
-        if ($request->filled('video_url')) {
-            $validated['gambar'] = null;
-        }
-
+        // ✅ Video URL tetap disimpan, TIDAK menghapus gambar
         $validated['is_active'] = $request->has('is_active') ? true : false;
 
         Layanan::create($validated);
@@ -106,16 +100,16 @@ class LayananController extends Controller
             'deskripsi' => 'required|string',
             'gambar' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'video_url' => 'nullable|url|max:500',
-            'harga_mulai' => 'required|numeric|min:0',
+            'harga_mulai' => 'required|numeric|min:0|max:9999999999',
             'is_active' => 'boolean',
         ], [
             'video_url.url' => 'URL video harus berupa URL yang valid.',
             'video_url.max' => 'URL video maksimal 500 karakter.',
+            'harga_mulai.max' => 'Harga maksimal Rp 9.999.999.999.',
         ]);
 
-        // Upload gambar baru jika ada
+        // ✅ Upload gambar baru jika ada
         if ($request->hasFile('gambar')) {
-            // Validasi gambar
             $validation = FileHelper::validateImage($request->file('gambar'), 2048);
             if (!$validation['valid']) {
                 return redirect()->back()
@@ -129,20 +123,11 @@ class LayananController extends Controller
                 $layanan->gambar
             );
         } else {
-            // Jika tidak ada gambar baru, pertahankan gambar lama
+            // ✅ Pertahankan gambar lama
             $validated['gambar'] = $layanan->gambar;
         }
 
-        // Jika ada video URL, hapus gambar
-        if ($request->filled('video_url')) {
-            $validated['gambar'] = null;
-            
-            // Hapus file gambar lama jika ada
-            if ($layanan->gambar) {
-                FileHelper::deleteFile('layanan', $layanan->gambar);
-            }
-        }
-
+        // ✅ Video URL tetap disimpan, TIDAK menghapus gambar
         $validated['is_active'] = $request->has('is_active') ? true : false;
 
         $layanan->update($validated);
@@ -153,13 +138,11 @@ class LayananController extends Controller
 
     public function destroy(Layanan $layanan)
     {
-        // Cek apakah layanan memiliki pesanan
         if ($layanan->pesanan()->count() > 0) {
             return redirect()->back()
                 ->with('error', 'Layanan tidak dapat dihapus karena sudah memiliki pesanan!');
         }
 
-        // Hapus gambar jika ada
         if ($layanan->gambar) {
             FileHelper::deleteFile('layanan', $layanan->gambar);
         }
@@ -186,6 +169,7 @@ class LayananController extends Controller
     {
         $search = $request->input('search');
         
+        // ✅ UBAH dari get() menjadi paginate()
         $layanan = Layanan::withCount('pesanan')
             ->where(function($query) use ($search) {
                 $query->where('nama_layanan', 'like', "%{$search}%")
@@ -194,7 +178,7 @@ class LayananController extends Controller
                       ->orWhere('harga_mulai', 'like', "%{$search}%");
             })
             ->latest()
-            ->get();
+            ->paginate(9);
 
         return view('admin.layanan.index', compact('layanan'));
     }
